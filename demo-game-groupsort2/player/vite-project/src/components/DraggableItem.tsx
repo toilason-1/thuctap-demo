@@ -7,7 +7,7 @@ import { layoutTransition } from "../config";
 const DraggableItem: React.FC<DraggableItemProps> = ({
   item,
   onDragEnd,
-  // containerRef,
+  containerRef,
   isDragging,
   onDragStart,
 }) => {
@@ -39,6 +39,7 @@ const DraggableItem: React.FC<DraggableItemProps> = ({
       layout
       layoutId={item.id}
       drag
+      dragConstraints={containerRef}
       dragMomentum={false}
       dragElastic={0.1}
       onDragStart={handleDragStart}

@@ -6,7 +6,7 @@ const GroupColumn: React.FC<GroupColumnProps> = ({ group, items }) => {
   return (
     <div
       data-group-id={group.id}
-      className="shrink-0 w-64 h-full flex flex-col items-center bg-blue-50 rounded-t-3xl border-l-4 border-r-4 border-t-4 border-blue-200"
+      className="shrink-0 w-64 h-full flex flex-col items-center bg-blue-50 rounded-3xl border-4 border-blue-200"
     >
       <div className="flex flex-col items-center p-4 border-b-4 border-blue-200 w-full bg-blue-100 rounded-t-3xl">
         <div className="w-32 h-32 flex items-center justify-center">
@@ -29,7 +29,7 @@ const GroupColumn: React.FC<GroupColumnProps> = ({ group, items }) => {
               layoutId={item.id}
               layout
               transition={layoutTransition}
-              className="w-32 h-32 flex items-center justify-center border-4 border-green-400 bg-white rounded-2xl shadow"
+              className="w-32 h-32 shrink-0 flex items-center justify-center border-4 border-green-400 bg-white rounded-2xl shadow"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
