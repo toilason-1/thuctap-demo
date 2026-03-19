@@ -17,7 +17,7 @@ const GroupColumn: React.FC<GroupColumnProps> = ({ group, items }) => {
     >
       <div className="flex flex-col items-center p-4 border-b-4 border-blue-200 w-full bg-blue-100 rounded-t-3xl">
         <img
-          src={group.imgsrc}
+          src={group.imagePath}
           alt={group.name}
           className="w-24 h-24 object-contain"
         />
@@ -36,7 +36,7 @@ const GroupColumn: React.FC<GroupColumnProps> = ({ group, items }) => {
               className="w-32 h-32 shrink-0 flex items-center justify-center border-4 border-green-400 bg-white rounded-2xl shadow"
             >
               <img
-                src={item.imgsrc}
+                src={item.imagePath}
                 alt={item.name}
                 className="w-20 h-20 object-contain"
               />

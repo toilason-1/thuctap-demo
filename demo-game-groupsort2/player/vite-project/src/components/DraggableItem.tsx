@@ -23,7 +23,7 @@ export const ItemCard: React.FC<Props & { style?: React.CSSProperties }> = ({
     transition={layoutTransition}
   >
     <img
-      src={item.imgsrc}
+      src={item.imagePath}
       alt={item.name}
       className="w-24 h-24 object-contain pointer-events-none"
     />

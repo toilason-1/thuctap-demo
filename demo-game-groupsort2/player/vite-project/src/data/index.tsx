@@ -15,57 +15,57 @@ export const MY_APP_DATA: { groups: Group[]; items: Item[]; } = import.meta.env.
   )["MY_APP_DATA"]
   : {
     groups: [
-      { id: "group1", name: "Trái cây", imgsrc: "/svg/basket.svg" },
-      { id: "group2", name: "Rau củ", imgsrc: "/svg/box.svg" },
-      { id: "group3", name: "Đồ dùng", imgsrc: "/svg/backpack.svg" },
+      { id: "group1", name: "Trái cây", imagePath: "/svg/basket.svg" },
+      { id: "group2", name: "Rau củ", imagePath: "/svg/box.svg" },
+      { id: "group3", name: "Đồ dùng", imagePath: "/svg/backpack.svg" },
     ],
     items: [
       {
         id: "item1",
         name: "Táo",
-        imgsrc: "/svg/apple.svg",
+        imagePath: "/svg/apple.svg",
         groupId: "group1",
       },
       {
         id: "item2",
         name: "Chuối",
-        imgsrc: "/svg/banana.svg",
+        imagePath: "/svg/banana.svg",
         groupId: "group1",
       },
       {
         id: "item3",
         name: "Cà rốt",
-        imgsrc: "/svg/carrot.svg",
+        imagePath: "/svg/carrot.svg",
         groupId: "group2",
       },
       {
         id: "item4",
         name: "Khoai tây",
-        imgsrc: "/svg/potato.svg",
+        imagePath: "/svg/potato.svg",
         groupId: "group2",
       },
       {
         id: "item5",
         name: "Sách",
-        imgsrc: "/svg/book.svg",
+        imagePath: "/svg/book.svg",
         groupId: "group3",
       },
       {
         id: "item6",
         name: "Bút",
-        imgsrc: "/svg/pen.svg",
+        imagePath: "/svg/pen.svg",
         groupId: "group3",
       },
       {
         id: "item7",
         name: "Cam",
-        imgsrc: "/svg/orange.svg",
+        imagePath: "/svg/orange.svg",
         groupId: "group1",
       },
       {
         id: "item8",
         name: "Dâu",
-        imgsrc: "/svg/strawberry.svg",
+        imagePath: "/svg/strawberry.svg",
         groupId: "group1",
       },
     ],
