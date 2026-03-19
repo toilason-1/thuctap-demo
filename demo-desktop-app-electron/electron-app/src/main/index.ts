@@ -13,7 +13,7 @@ function createWindow() {
     minHeight: 600,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
       webSecurity: false // allow loading local file:// images
