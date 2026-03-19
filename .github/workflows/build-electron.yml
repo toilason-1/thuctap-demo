@@ -1,4 +1,4 @@
-name: Build Projects
+name: Build Electron Projects
 
 on:
   push:
@@ -7,26 +7,16 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  build-electron:
     strategy:
       matrix:
         include:
-          # Vite projects
-          - project: demo-game-groupsort2/player/vite-project
-            type: vite
-            os: ubuntu-latest
-          # Add more project paths here
-
-          # Electron projects
           - project: demo-desktop-app-electron/electron-app
-            type: electron
             os: windows-latest
-          # - project: demo-desktop-app-electron/electron-app
-          #   type: electron
-          #   os: macos-latest
           - project: demo-desktop-app-electron/electron-app
-            type: electron
             os: ubuntu-latest
+          # - project: demo-desktop-app-electron/electron-app
+          #   os: macos-latest
 
     runs-on: ${{ matrix.os }}
 
@@ -56,20 +46,9 @@ jobs:
         working-directory: ${{ matrix.project }}
         run: yarn install --immutable
 
-      # Conditional build step
-      - name: Build project
-        working-directory: ${{ matrix.project }}
-        run: |
-          if [ "${{ matrix.type }}" = "vite" ]; then
-            yarn build
-          else
-            yarn build
-          fi
-
-      # Conditional packaging step for electron
       - name: Package electron app
-        if: matrix.type == 'electron'
         working-directory: ${{ matrix.project }}
+        shell: bash
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             yarn build:win
@@ -81,12 +60,17 @@ jobs:
 
       - name: Sanitize artifact name
         id: sanitize
-        run: echo "ARTIFACT_NAME=build-${{ matrix.type }}-$(echo '${{ matrix.project }}' | tr '/' '-')" >> $GITHUB_ENV
+        run: |
+          echo "ARTIFACT_NAME=build-electron-$(echo '${{ matrix.project }}' | tr '/' '-')" >> $GITHUB_ENV
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}-${{ matrix.os }}
           path: |
-            ${{ matrix.project }}/dist
-            ${{ matrix.project }}/release
+            ${{ matrix.project }}/dist/*.exe
+            ${{ matrix.project }}/dist/*.AppImage
+            ${{ matrix.project }}/dist/*.deb
+            ${{ matrix.project }}/dist/*.rpm
+            ${{ matrix.project }}/dist/*.dmg
+            ${{ matrix.project }}/dist/*.zip
