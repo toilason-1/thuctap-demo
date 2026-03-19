@@ -5,6 +5,25 @@ import archiver from 'archiver'
 
 const isDev = process.env.NODE_ENV === 'development'
 
+// ── Settings persistence (simple JSON file in userData) ──────────────────────
+const settingsPath = path.join(app.getPath('userData'), 'settings.json')
+
+function readGlobalSettings(): object {
+  try {
+    if (fs.existsSync(settingsPath)) {
+      return JSON.parse(fs.readFileSync(settingsPath, 'utf-8'))
+    }
+  } catch {
+    // ignore corrupt file
+  }
+  return {}
+}
+
+function writeGlobalSettings(data: object): void {
+  fs.writeFileSync(settingsPath, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+// ── Window ────────────────────────────────────────────────────────────────────
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
@@ -25,7 +44,8 @@ function createWindow() {
     win.loadURL('http://localhost:5173')
     win.webContents.openDevTools()
   } else {
-    win.loadFile(path.join(__dirname, '../dist/index.html'))
+    // Updated to point to renderer dist per new code
+    win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 }
 
@@ -65,6 +85,16 @@ ipcMain.handle('get-templates', async () => {
   return templates
 })
 
+// Returns: 'empty' | 'has-project' | 'non-empty'
+ipcMain.handle('check-folder-status', async (_event, folderPath: string) => {
+  if (!fs.existsSync(folderPath)) return 'empty'
+  const entries = fs.readdirSync(folderPath)
+  if (entries.length === 0) return 'empty'
+  const projFile = path.join(folderPath, 'project.mgproj')
+  if (fs.existsSync(projFile)) return 'has-project'
+  return 'non-empty'
+})
+
 // Dialog: choose a folder to save project
 ipcMain.handle('choose-project-folder', async () => {
   const result = await dialog.showOpenDialog({
@@ -74,17 +104,20 @@ ipcMain.handle('choose-project-folder', async () => {
   return result.canceled ? null : result.filePaths[0]
 })
 
-// Dialog: open an existing project file
-ipcMain.handle('open-project-file', async () => {
-  const result = await dialog.showOpenDialog({
-    properties: ['openFile'],
-    filters: [{ name: 'Minigame Project', extensions: ['mgproj'] }],
-    title: 'Open Project'
-  })
-  if (result.canceled || !result.filePaths[0]) return null
-  const filePath = result.filePaths[0]
-  const content = fs.readFileSync(filePath, 'utf-8')
-  return { filePath, data: JSON.parse(content) }
+// Dialog: open an existing project file. filePath is optional: if provided, load that file directly (no dialog)
+ipcMain.handle('open-project-file', async (_event, filePath?: string) => {
+  let resolvedPath = filePath
+  if (!resolvedPath) {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'Minigame Project', extensions: ['mgproj'] }],
+      title: 'Open Project'
+    })
+    if (result.canceled || !result.filePaths[0]) return null
+    resolvedPath = result.filePaths[0]
+  }
+  const content = fs.readFileSync(resolvedPath, 'utf-8')
+  return { filePath: resolvedPath, data: JSON.parse(content) }
 })
 
 // Save project JSON
@@ -94,28 +127,22 @@ ipcMain.handle('save-project', async (_event, projectData: object, projectPath: 
 })
 
 // Import an image into the project's assets folder, returns the relative asset path
-ipcMain.handle('import-image', async (_event, sourcePath: string, projectDir: string) => {
-  const assetsDir = path.join(projectDir, 'assets')
-  fs.mkdirSync(assetsDir, { recursive: true })
+// desiredName: entity id like "group-1" or "item-3" — image stored as "<desiredName><ext>"
+ipcMain.handle(
+  'import-image',
+  async (_event, sourcePath: string, projectDir: string, desiredName: string) => {
+    const assetsDir = path.join(projectDir, 'assets')
+    fs.mkdirSync(assetsDir, { recursive: true })
 
-  const ext = path.extname(sourcePath)
-  const basename = path.basename(sourcePath, ext)
-  const safeName = basename.replace(/[^a-zA-Z0-9_-]/g, '_')
+    const ext = path.extname(sourcePath).toLowerCase()
+    const destName = `${desiredName}${ext}`
+    const destPath = path.join(assetsDir, destName)
 
-  // Avoid collisions
-  let destName = `${safeName}${ext}`
-  let destPath = path.join(assetsDir, destName)
-  let counter = 1
-  while (fs.existsSync(destPath)) {
-    destName = `${safeName}_${counter}${ext}`
-    destPath = path.join(assetsDir, destName)
-    counter++
+    fs.copyFileSync(sourcePath, destPath)
+    // Return relative path from project dir (not from index.html which will be in project root)
+    return `assets/${destName}`
   }
-
-  fs.copyFileSync(sourcePath, destPath)
-  // Return relative path from project dir (not from index.html which will be in project root)
-  return `assets/${destName}`
-})
+)
 
 // Open system file picker for images
 ipcMain.handle('pick-image', async () => {
@@ -133,7 +160,14 @@ ipcMain.handle('resolve-asset-url', async (_event, projectDir: string, relativeP
   return `file://${abs.replace(/\\/g, '/')}`
 })
 
-// Export project → either folder or zip
+// ── Settings IPC ──────────────────────────────────────────────────────────────
+ipcMain.handle('settings-read-global', async () => readGlobalSettings())
+ipcMain.handle('settings-write-global', async (_event, data: object) => {
+  writeGlobalSettings(data)
+  return true
+})
+
+// ── Export project → either folder or zip ─────────────────────────────────────
 ipcMain.handle(
   'export-project',
   async (
@@ -187,6 +221,10 @@ ipcMain.handle(
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/**
+ * OLD CODE VERSION KEPT: Injects app data before the first script tag
+ * to ensure compatibility with specific project requirements.
+ */
 function injectAppData(html: string, appData: object): string {
   const scriptTag = `<script>window.APP_DATA = ${JSON.stringify(appData)};window.MY_APP_DATA=window.APP_DATA</script>`
   // // Inject just before </head> if present, otherwise before </body>, otherwise prepend

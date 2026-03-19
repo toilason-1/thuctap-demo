@@ -1,18 +1,27 @@
 import { useState } from 'react'
-import { Box, Typography, CircularProgress, Tooltip, IconButton } from '@mui/material'
+import { Box, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material'
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate'
 import ClearIcon from '@mui/icons-material/Clear'
 import { useAssetUrl } from '../hooks/useAssetUrl'
 
 interface Props {
   projectDir: string
-  value: string | null   // relative asset path stored in data
+  /** Entity id like "group-1" or "item-3" — image will be saved as <entityId>.<ext> */
+  entityId: string
+  value: string | null
   onChange: (relativePath: string | null) => void
   label?: string
-  size?: number          // px width & height of the square
+  size?: number
 }
 
-export default function ImagePicker({ projectDir, value, onChange, label, size = 100 }: Props) {
+export default function ImagePicker({
+  projectDir,
+  entityId,
+  value,
+  onChange,
+  label,
+  size = 100,
+}: Props) {
   const [loading, setLoading] = useState(false)
   const url = useAssetUrl(projectDir, value)
 
@@ -21,7 +30,7 @@ export default function ImagePicker({ projectDir, value, onChange, label, size =
     if (!picked) return
     setLoading(true)
     try {
-      const relativePath = await window.electronAPI.importImage(picked, projectDir)
+      const relativePath = await window.electronAPI.importImage(picked, projectDir, entityId)
       onChange(relativePath)
     } finally {
       setLoading(false)
@@ -69,7 +78,6 @@ export default function ImagePicker({ projectDir, value, onChange, label, size =
               alt={label ?? 'asset'}
               sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
-            {/* Clear button overlay */}
             <IconButton
               size="small"
               onClick={handleClear}
@@ -88,7 +96,9 @@ export default function ImagePicker({ projectDir, value, onChange, label, size =
           </>
         ) : (
           <>
-            <AddPhotoAlternateIcon sx={{ fontSize: size * 0.32, color: 'rgba(255,255,255,0.25)' }} />
+            <AddPhotoAlternateIcon
+              sx={{ fontSize: size * 0.32, color: 'rgba(255,255,255,0.25)' }}
+            />
             {label && (
               <Typography
                 variant="caption"

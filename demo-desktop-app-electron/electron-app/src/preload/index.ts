@@ -4,18 +4,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Templates
   getTemplates: () => ipcRenderer.invoke('get-templates'),
 
-  // Project management
+  // Folder / project management
+  checkFolderStatus: (folderPath: string) => ipcRenderer.invoke('check-folder-status', folderPath),
   chooseProjectFolder: () => ipcRenderer.invoke('choose-project-folder'),
-  openProjectFile: () => ipcRenderer.invoke('open-project-file'),
+  openProjectFile: (filePath?: string) => ipcRenderer.invoke('open-project-file', filePath),
   saveProject: (data: object, projectPath: string) =>
     ipcRenderer.invoke('save-project', data, projectPath),
 
-  // Assets
+  // Assets — desiredName is the entity id (e.g. "group-1")
   pickImage: () => ipcRenderer.invoke('pick-image'),
-  importImage: (sourcePath: string, projectDir: string) =>
-    ipcRenderer.invoke('import-image', sourcePath, projectDir),
+  importImage: (sourcePath: string, projectDir: string, desiredName: string) =>
+    ipcRenderer.invoke('import-image', sourcePath, projectDir, desiredName),
   resolveAssetUrl: (projectDir: string, relativePath: string) =>
     ipcRenderer.invoke('resolve-asset-url', projectDir, relativePath),
+
+  // Settings
+  settingsReadGlobal: () => ipcRenderer.invoke('settings-read-global'),
+  settingsWriteGlobal: (data: object) => ipcRenderer.invoke('settings-write-global', data),
 
   // Export
   exportProject: (opts: {
