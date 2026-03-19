@@ -1,10 +1,12 @@
 name: Build Vite Projects
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch: # This enables the "Run workflow" button
+    inputs:
+      reason:
+        description: "Reason for manual build"
+        required: false
+        default: "Manual trigger"
 
 jobs:
   build-vite:
@@ -31,12 +33,16 @@ jobs:
       - name: Install Yarn 4
         run: corepack enable && corepack prepare yarn@4.12.0 --activate
 
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        shell: bash
+        working-directory: ${{ matrix.project }}
+        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
         with:
-          path: |
-            .yarn/cache
-            ${{ matrix.project }}/.yarn/install-state.gz
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ runner.os }}-yarn-${{ hashFiles(format('{0}/yarn.lock', matrix.project)) }}
           restore-keys: |
             ${{ runner.os }}-yarn-
@@ -51,6 +57,7 @@ jobs:
 
       - name: Sanitize artifact name
         id: sanitize
+        shell: bash
         run: |
           echo "ARTIFACT_NAME=build-vite-$(echo '${{ matrix.project }}' | tr '/' '-')" >> $GITHUB_ENV
 
