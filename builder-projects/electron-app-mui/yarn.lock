@@ -13055,4 +13055,8 @@ __metadata:
   checksum: 10c0/860d25a81ab41d33aa25f8d0d07b091a04acb426e605f396227a796e9e800c44723ed96d0f53a512b57be3d1520f45bf69c0cb3b378a232a00787a2609625307
   languageName: node
   linkType: hard
+<<<<<<< HEAD
 >>>>>>> 3ce010ca3538d05241544dc0b6a1a78eedb40e7c
+=======
+>>>>>>> origin/main
+>>>>>>> origin/word-search

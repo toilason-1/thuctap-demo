@@ -144,7 +144,11 @@ export default function HomePage() {
 =======
           : template.gameType === 'group-sort'
         ?{} :{}
+<<<<<<< HEAD
 >>>>>>> 3ce010ca3538d05241544dc0b6a1a78eedb40e7c
+=======
+>>>>>>> origin/main
+>>>>>>> origin/word-search
     const newProject = {
       version: '1.0.0',
       templateId: template.id,
