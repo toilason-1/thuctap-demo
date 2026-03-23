@@ -3,6 +3,7 @@ import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove'
 import EditIcon from '@mui/icons-material/Edit'
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
 import FolderZipIcon from '@mui/icons-material/FolderZip'
+import PreviewIcon from '@mui/icons-material/Preview'
 import RedoIcon from '@mui/icons-material/Redo'
 import SaveIcon from '@mui/icons-material/Save'
 import SaveAsIcon from '@mui/icons-material/SaveAs'
@@ -218,7 +219,7 @@ export default function ProjectPage() {
     }
   }
 
-  // ── Export ────────────────────────────────────────────────────────────────
+  // ── Export / Preview ───────────────────────────────────────────────────────
   const handleExport = async (mode: 'folder' | 'zip') => {
     setExportAnchor(null)
     if (!meta) return
@@ -233,6 +234,20 @@ export default function ProjectPage() {
       showSnack(`Exported to: ${result.path}`)
     } catch (e) {
       showSnack(`Export failed: ${e}`, 'error')
+    }
+  }
+
+  const handlePreview = async () => {
+    if (!meta) return
+    try {
+      await window.electronAPI.previewProject({
+        templateId: meta.templateId,
+        appData: history.present,
+        projectDir: meta.projectDir
+      })
+      showSnack('Preview opened')
+    } catch (e) {
+      showSnack(`Preview failed: ${e}`, 'error')
     }
   }
 
@@ -398,6 +413,11 @@ export default function ProjectPage() {
           <Tooltip title="Save As (Ctrl+Shift+S)">
             <IconButton size="small" onClick={handleSaveAs}>
               <SaveAsIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Preview">
+            <IconButton size="small" onClick={handlePreview}>
+              <PreviewIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Button
