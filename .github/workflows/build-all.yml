@@ -120,6 +120,23 @@ jobs:
             cp -rv "$dir"/* "$TARGET_DIR/"
           done
 
+      # Create a ready-to-build bundle
+      - name: Prepare electron-builder ready bundle
+        shell: bash
+        run: |
+          BUNDLE_DIR="./electron-bundle"
+          mkdir -p "$BUNDLE_DIR"
+
+          cp -r "${{ matrix.project_path }}/out" "$BUNDLE_DIR/"
+          cp -r "${{ matrix.project_path }}/templates" "$BUNDLE_DIR/"
+          cp "${{ matrix.project_path }}/package.json" "$BUNDLE_DIR/"
+
+          [ -f "${{ matrix.project_path }}/electron-builder.yml" ] && \
+            cp "${{ matrix.project_path }}/electron-builder.yml" "$BUNDLE_DIR/" || true
+
+          # Optional: copy icons, assets, etc. if used
+          cp -r "${{ matrix.project_path }}/resources" "$BUNDLE_DIR/" || true
+
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         shell: bash
@@ -156,6 +173,12 @@ jobs:
         run: |
           # Create a name like build-builder-standard-windows-latest
           echo "FINAL_NAME=${{ matrix.app_id }}-${{ matrix.os }}" >> $GITHUB_ENV
+
+      - name: Upload pre-package bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.FINAL_NAME }}-bundle
+          path: ./electron-bundle
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
