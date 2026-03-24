@@ -153,16 +153,21 @@ export default function MatchingGame() {
           "linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)",
         fontFamily: "'Nunito', 'Comic Sans MS', cursive, sans-serif",
         flexDirection: isLandscape ? "row" : "column",
-        alignItems: isLandscape ? "stretch" : "stretch",
+        alignItems: "stretch",
       }}
     >
       {/* HUD Panel */}
       <div
-        className="flex-shrink-0 flex items-center justify-center p-4"
+        className="shrink-0 flex items-center justify-center p-4 ml-8 relative m-10"
         style={
           isLandscape
-            ? { width: 240, overflowY: "auto" }
-            : { height: "auto", maxHeight: "35vh" }
+            ? {
+                width: "clamp(240px, 20vw, 400px)", // Responsive width
+                justifyContent: "flex-start", // Align top
+                flexDirection: "column",
+                overflowY: "visible", // Allow banner to pop out if needed
+              }
+            : { height: "auto", maxHeight: "35vh", justifyContent: "center" }
         }
       >
         <HUD
@@ -178,7 +183,7 @@ export default function MatchingGame() {
       {/* Game Area */}
       <div
         ref={containerRef}
-        className="flex-1 flex items-center justify-center overflow-hidden"
+        className="flex-1 flex items-center justify-center overflow-hidden m-10"
         style={{ padding: 16 }}
       >
         <motion.div

@@ -1,0 +1,3 @@
+:root {
+  --fluid-text-lg: clamp(1.25rem, 2vw + 1rem, 3rem);
+}

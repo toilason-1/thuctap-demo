@@ -34,22 +34,42 @@ export function HUD({
         <div
           className="rounded-2xl px-4 py-2 text-center shadow"
           style={{
+            padding: "clamp(0.5rem, 1.5vh, 1.5rem)", // Scales padding based on height
             background: "rgba(124,58,237,0.18)",
             border: "1px solid rgba(167,139,250,0.3)",
           }}
         >
-          <div className="text-xs text-purple-300 font-semibold">Lượt đi</div>
-          <div className="text-2xl font-black text-white">{moves}</div>
+          <div
+            style={{ fontSize: "clamp(0.7rem, 1.2vh, 1rem)" }}
+            className="text-purple-300 font-semibold"
+          >
+            Lượt đi
+          </div>
+          <div
+            style={{ fontSize: "clamp(1.5rem, 3vh, 2.5rem)" }}
+            className="font-black text-white"
+          >
+            {moves}
+          </div>
         </div>
         <div
           className="rounded-2xl px-4 py-2 text-center shadow"
           style={{
+            padding: "clamp(0.5rem, 1.5vh, 1.5rem)", // Scales padding based on height
             background: "rgba(16,185,129,0.18)",
             border: "1px solid rgba(52,211,153,0.3)",
           }}
         >
-          <div className="text-xs text-emerald-300 font-semibold">Đã ghép</div>
-          <div className="text-2xl font-black text-white">
+          <div
+            style={{ fontSize: "clamp(0.7rem, 1.2vh, 1rem)" }}
+            className="text-emerald-300 font-semibold"
+          >
+            Đã ghép
+          </div>
+          <div
+            style={{ fontSize: "clamp(1.5rem, 3vh, 2.5rem)" }}
+            className="font-black text-white"
+          >
             {matched}/{total}
           </div>
         </div>
