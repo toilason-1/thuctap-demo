@@ -32,11 +32,10 @@ import {
 } from '@mui/material'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import GroupSortEditor from '../components/GroupSortEditor'
-import QuizEditor from '../components/QuizEditor'
 import SettingsPanel from '../components/SettingsPanel'
 import WordSearchEditor from '../components/WordSearchEditor'
 import { useSettings } from '../context/SettingsContext'
+import { GAME_REGISTRY } from '../games/registry'
 import { useHistory } from '../hooks/useHistory'
 import { AnyAppData, GameTemplate, ProjectFile, ProjectMeta, WordSearchAppData } from '../types'
 
@@ -515,27 +514,25 @@ export default function ProjectPage() {
       )}
 
       <Box sx={{ flex: 1, overflow: 'hidden' }}>
-        {templateId === 'group-sort' && (
-          <GroupSortEditor
-            appData={history.present as any}
-            projectDir={meta.projectDir}
-            onChange={handleAppDataChange}
-          />
-        )}
-        {templateId === 'plane-quiz' && (
-          <QuizEditor
-            appData={history.present as any}
-            projectDir={meta.projectDir}
-            onChange={handleAppDataChange}
-          />
-        )}
-        {templateId === 'word-search' && (
-          <WordSearchEditor
-            appData={history.present as any}
-            projectDir={meta.projectDir}
-            onChange={handleAppDataChange}
-          />
-        )}
+        {(() => {
+          const entry = GAME_REGISTRY[templateId]
+          if (!entry)
+            return (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Typography color="error">
+                  No editor registered for game type: {templateId}
+                </Typography>
+              </Box>
+            )
+          const { Editor } = entry
+          return (
+            <Editor
+              appData={history.present}
+              projectDir={meta.projectDir}
+              onChange={handleAppDataChange}
+            />
+          )
+        })()}
       </Box>
 
       {/* ── Settings panel ── */}

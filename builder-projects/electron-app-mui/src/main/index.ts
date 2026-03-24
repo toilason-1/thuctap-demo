@@ -2,6 +2,7 @@ import archiver from 'archiver'
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
+import { prepareAppDataForTemplate } from './gameRegistry'
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -54,7 +55,7 @@ function copyDirSync(src: string, dest: string) {
   }
 }
 
-/** Recursively collect all asset paths referenced by project data */
+/** Recursively collect all values of keys named 'imagePath' or 'imageUrl' that reference assets/ */
 function collectUsedAssets(obj: unknown, out = new Set<string>()): Set<string> {
   if (!obj || typeof obj !== 'object') return out
   if (Array.isArray(obj)) {
@@ -62,15 +63,12 @@ function collectUsedAssets(obj: unknown, out = new Set<string>()): Set<string> {
     return out
   }
   for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
-    if (
-      (k === 'imagePath' || k === 'backgroundImagePath') &&
-      typeof v === 'string' &&
-      v.startsWith('assets/')
-    ) {
-      out.add(v)
-    } else {
-      collectUsedAssets(v, out)
-    }
+    if (k === 'imagePath' && typeof v === 'string' && v.startsWith('assets/')) out.add(v)
+    else if (k === 'imageUrl' && typeof v === 'string') {
+      // Could be './assets/foo.png' or 'assets/foo.png'
+      const rel = v.replace(/^\.\//, '')
+      if (rel.startsWith('assets/')) out.add(rel)
+    } else collectUsedAssets(v, out)
   }
   return out
 }
@@ -93,7 +91,7 @@ function purgeUnusedAssets(projectDir: string, projectData: object) {
 }
 
 function injectAppData(html: string, appData: object): string {
-  const scriptTag = `<script>window.APP_DATA = ${JSON.stringify(appData)};window.MY_APP_DATA=window.APP_DATA;window.win={};window.win.DATA=window.APP_DATA</script>`
+  const scriptTag = `<script>window.APP_DATA = ${JSON.stringify(appData)};window.MY_APP_DATA=window.APP_DATA;window.win={DATA:window.APP_DATA}</script>`
   return html.replace(/<script/, scriptTag + '\n<script')
 }
 
@@ -103,14 +101,31 @@ function normalizeAssetPaths(obj: unknown, projectDir: string): unknown {
   if (typeof obj !== 'object') return obj
 
   const result: Record<string, unknown> = {}
+
   for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
-    if (typeof value === 'string' && value.startsWith('assets/')) {
-      const absPath = path.join(projectDir, value)
-      result[key] = `file://${absPath.replace(/\\/g, '/')}`
-    } else {
-      result[key] = normalizeAssetPaths(value, projectDir)
+    // 1. Check if the key matches: (img OR image) AND (src OR path OR url)
+    const lowerKey = key.toLowerCase()
+    const isImageKey = /(img|image).*(src|path|url)/.test(lowerKey)
+
+    if (isImageKey && typeof value === 'string') {
+      // 2. Strip leading "./" if present
+      const cleanPath = value.startsWith('./') ? value.slice(2) : value
+
+      // 3. Check if the path starts with the allowed directories
+      const isTargetDir = /^(images|data|assets)/.test(cleanPath)
+
+      if (isTargetDir) {
+        const absPath = path.join(projectDir, cleanPath)
+        // Ensure forward slashes for the file:// URL scheme
+        result[key] = `file://${absPath.split(path.sep).join('/')}`
+        continue // Skip recursion for this value
+      }
     }
+
+    // Recurse for nested objects/unmatched keys
+    result[key] = normalizeAssetPaths(value, projectDir)
   }
+
   return result
 }
 
@@ -131,7 +146,8 @@ ipcMain.handle(
     if (!fs.existsSync(htmlPath)) throw new Error(`Template HTML not found for: ${templateId}`)
 
     const sanitizedData = normalizeAssetPaths(appData, projectDir)
-    const injectedHtml = injectAppData(fs.readFileSync(htmlPath, 'utf-8'), sanitizedData as object)
+    const templateData = prepareAppDataForTemplate(templateId, sanitizedData as object)
+    const injectedHtml = injectAppData(fs.readFileSync(htmlPath, 'utf-8'), templateData)
 
     const previewWindow = new BrowserWindow({
       width: 1100,
@@ -344,7 +360,8 @@ ipcMain.handle(
     const htmlPath = path.join(gameDir, 'index.html')
     if (!fs.existsSync(htmlPath)) throw new Error(`Template HTML not found for: ${templateId}`)
 
-    const injectedHtml = injectAppData(fs.readFileSync(htmlPath, 'utf-8'), appData)
+    const templateData = prepareAppDataForTemplate(templateId, appData)
+    const injectedHtml = injectAppData(fs.readFileSync(htmlPath, 'utf-8'), templateData)
 
     if (mode === 'folder') {
       const result = await dialog.showOpenDialog(mainWindow!, {

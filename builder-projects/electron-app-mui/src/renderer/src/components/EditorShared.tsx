@@ -3,7 +3,7 @@
  * Keep this file free of game-specific logic.
  */
 import { Badge, Box, TextField, Typography } from '@mui/material'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 // ── SidebarTab ────────────────────────────────────────────────────────────────
 export function SidebarTab({
@@ -236,4 +236,109 @@ export function DroppableZone({
       {children}
     </Box>
   )
+}
+
+// ── StickyHeader ──────────────────────────────────────────────────────────────
+/**
+ * A sticky bar pinned to the top of the scrollable content area.
+ * Renders a title + description on the left, and action controls on the right.
+ */
+export function StickyHeader({
+  title,
+  description,
+  actions
+}: {
+  title: string
+  description?: string
+  actions?: React.ReactNode
+}) {
+  return (
+    <Box
+      sx={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 2,
+        mb: 2,
+        py: 1.5,
+        px: 2,
+        // Dark semi-transparent background matching your theme
+        background: 'rgba(15, 18, 25, 0.88)',
+        // Stronger blur for better contrast
+        backdropFilter: 'blur(20px) saturate(180%)',
+        // Subtle border to match your UI elements
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        // Optional: slight shadow for depth
+        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.4)'
+      }}
+    >
+      <Box>
+        <Typography
+          variant="h6"
+          sx={{
+            lineHeight: 1.2,
+            color: 'common.white', // Ensure title has good contrast
+            fontWeight: 600
+          }}
+        >
+          {title}
+        </Typography>
+        {description && (
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'rgba(255, 255, 255, 0.7)', // Slightly faded for hierarchy
+              display: 'block',
+              mt: 0.25
+            }}
+          >
+            {description}
+          </Typography>
+        )}
+      </Box>
+      {actions && (
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1,
+            alignItems: 'center',
+            flexShrink: 0
+          }}
+        >
+          {actions}
+        </Box>
+      )}
+    </Box>
+  )
+}
+
+// ── useEditorShortcuts ────────────────────────────────────────────────────────
+/**
+ * Registers Ctrl+N / Ctrl+Shift+N / Ctrl+Shift+Alt+N keyboard shortcuts.
+ * onTier(1) = Ctrl+N (smallest unit)
+ * onTier(2) = Ctrl+Shift+N (mid unit)
+ * onTier(3) = Ctrl+Shift+Alt+N (highest unit)
+ */
+export function useEditorShortcuts(onTier: (tier: 1 | 2 | 3) => void) {
+  const cbRef = useRef(onTier)
+  cbRef.current = onTier
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey
+      if (!ctrl || e.key.toLowerCase() !== 'n') return
+      // Skip if focus is inside a text input/textarea to avoid hijacking typing
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      e.preventDefault()
+      if (e.shiftKey && e.altKey) cbRef.current(3)
+      else if (e.shiftKey) cbRef.current(2)
+      else cbRef.current(1)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 }

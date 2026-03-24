@@ -3,7 +3,7 @@ export interface GameTemplate {
   id: string
   name: string
   description: string
-  gameType: 'group-sort' | 'quiz' | 'plane-quiz' | 'word-search' | string
+  gameType: 'group-sort' | 'plane-quiz' | 'balloon-letter-picker' | string
   version: string
   thumbnailUrl: string | null // file:// URL resolved by main process, or null
 }
@@ -46,22 +46,19 @@ export interface QuizAppData {
   _questionCounter: number
 }
 
-// —— Word Search ————————————————————————————————————————————————————————————————————————————
-export interface WordSearchItem {
+// ── Balloon Letter Picker ─────────────────────────────────────────────────────
+export interface BalloonWord {
   id: string
   word: string
-  imagePath: string | null
+  imageUrl: string // relative path, e.g. './images/words/jump.png'
+  hint: string
 }
-export interface WordSearchAppData {
-  title: string
-  helperText: string
-  gridSize: number
-  backgroundImagePath: string | null
-  items: WordSearchItem[]
-  _itemCounter: number
+export interface BalloonLetterPickerAppData {
+  words: BalloonWord[]
+  _wordCounter: number
 }
 
-export type AnyAppData = GroupSortAppData | QuizAppData | WordSearchAppData
+export type AnyAppData = GroupSortAppData | QuizAppData | BalloonLetterPickerAppData
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 export type AutoSaveMode = 'off' | 'on-edit' | 'interval'
