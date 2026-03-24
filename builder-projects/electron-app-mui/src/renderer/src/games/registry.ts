@@ -60,6 +60,7 @@ export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
     Editor: PairMatchingEditor as GameRegistryEntry['Editor'],
     createInitialData: () => ({
       items: [],
+      minTotalPairs: 2,
       _itemCounter: 0
     })
   }

@@ -57,7 +57,8 @@ export default function PairMatchingEditor({ appData: raw, projectDir, onChange 
       const i: PairMatchingItem = {
         id,
         keyword: resolved.prefillNames ? `Pair ${counter}` : '',
-        imagePath: initialImage ?? null
+        imagePath: initialImage ?? null,
+        minPairs: 1
       }
       onChange({ ...data, _itemCounter: counter, items: [...items, i] })
     },

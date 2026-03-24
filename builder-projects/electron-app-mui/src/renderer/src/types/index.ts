@@ -58,12 +58,6 @@ export interface BalloonLetterPickerAppData {
   _wordCounter: number
 }
 
-export type AnyAppData =
-  | GroupSortAppData
-  | QuizAppData
-  | BalloonLetterPickerAppData
-  | PairMatchingAppData
-
 // ── Pair Matching ─────────────────────────────────────────────────────────────
 export interface PairMatchingItem {
   id: string
@@ -78,6 +72,12 @@ export interface PairMatchingAppData {
   cardBackImage?: string | null
   _itemCounter: number
 }
+
+export type AnyAppData =
+  | GroupSortAppData
+  | QuizAppData
+  | BalloonLetterPickerAppData
+  | PairMatchingAppData
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 export type AutoSaveMode = 'off' | 'on-edit' | 'interval'

@@ -32,6 +32,7 @@ function omitInternalKeys(obj: object): object {
 
 // ── Add transforms here ───────────────────────────────────────────────────────
 export const GAME_DATA_TRANSFORMS: Record<string, DataTransform> = {
+  // Balloon Letter Picker
   'balloon-letter-picker': (appData) => {
     // Template expects a flat array of { word, imageUrl, hint }
     const data = appData as { words?: { word: string; imageUrl: string; hint: string }[] }
@@ -39,17 +40,105 @@ export const GAME_DATA_TRANSFORMS: Record<string, DataTransform> = {
       (data.words ?? []).map(({ word, imageUrl, hint }) => ({ word, imageUrl, hint }))
     )
   },
+
+  // Group Sort
   'group-sort': (appData) => {
-    // This Template expects same object structure
-    return omitInternalKeys(appData)
+    // Template expects:
+    // {
+    //   groups: { id, name, imagePath }[]
+    //   items: { id, name, imagePath, groupId }[]
+    // }
+    const data = appData as {
+      groups?: { id: string; name: string; imagePath: string | null }[]
+      items?: { id: string; name: string; imagePath: string | null; groupId: string }[]
+    }
+
+    const groups = (data.groups ?? []).map(({ id, name, imagePath }) => ({
+      id,
+      name,
+      imagePath
+    }))
+
+    const items = (data.items ?? []).map(({ id, name, imagePath, groupId }) => ({
+      id,
+      name,
+      imagePath,
+      groupId
+    }))
+
+    return omitInternalKeys({ groups, items })
   },
+
+  // Plane Quiz
   'plane-quiz': (appData) => {
-    // This Template expects same object structure
-    return omitInternalKeys(appData)
+    // Template expects:
+    // {
+    //   questions: {
+    //     id, question, imagePath, answers: { id, text, isCorrect }[], multipleCorrect
+    //   }[]
+    // }
+    const data = appData as {
+      questions?: {
+        id: string
+        question: string
+        imagePath: string | null
+        answers?: { id: string; text: string; isCorrect: boolean }[]
+        multipleCorrect: boolean
+      }[]
+    }
+
+    const questions = (data.questions ?? []).map(
+      ({ id, question, imagePath, answers, multipleCorrect }) => ({
+        id,
+        question,
+        imagePath,
+        answers: (answers ?? []).map(({ id, text, isCorrect }) => ({
+          id,
+          text,
+          isCorrect
+        })),
+        multipleCorrect
+      })
+    )
+
+    return omitInternalKeys({ questions })
   },
+
+  // Pair Matching
   'pair-matching': (appData) => {
-    // This Template expects same object structure
-    return omitInternalKeys(appData)
+    // Template expects:
+    // {
+    //   minTotalPairs?: number
+    //   cardBackColor?: string
+    //   cardBackImage?: string | null
+    //   items: { id, image, keyword, minPairs? }[]
+    // }
+    // imagePath → image
+    const data = appData as {
+      items?: {
+        id: string
+        imagePath: string | null
+        keyword: string
+        minPairs?: number | null
+      }[]
+      minTotalPairs?: number | null
+      cardBackColor?: string
+      cardBackImage?: string | null
+    }
+
+    const items = (data.items ?? []).map(({ id, imagePath, keyword, minPairs }) => ({
+      id,
+      image: imagePath, // rename imagePath → image
+      keyword,
+      minPairs: minPairs ?? undefined
+    }))
+
+    return omitInternalKeys({
+      minTotalPairs: data.minTotalPairs ?? undefined,
+      cardBackColor: data.cardBackColor,
+      cardBackImage: data.cardBackImage,
+      items
+    })
   }
 }
 

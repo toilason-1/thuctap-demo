@@ -48,14 +48,14 @@ export default function Card({ card, onClick, disabled, size }: CardProps) {
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
-              className="flex flex-col items-center gap-1 px-1"
+              className="relative w-full h-full flex items-center justify-center"
             >
-              <span
-                style={{ fontSize: size * 0.22, lineHeight: 1 }}
-                className="opacity-30"
-              >
+              {/* Background image */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-30">
                 {isEmoji(image) ? (
-                  image
+                  <span style={{ fontSize: size * 0.4, lineHeight: 1 }}>
+                    {image}
+                  </span>
                 ) : (
                   <img
                     src={image}
@@ -63,9 +63,11 @@ export default function Card({ card, onClick, disabled, size }: CardProps) {
                     className="w-full h-full object-contain"
                   />
                 )}
-              </span>
+              </div>
+
+              {/* Centered keyword */}
               <span
-                className="font-black text-white tracking-widest"
+                className="font-black text-white tracking-widest z-10 text-center"
                 style={{
                   fontSize: size * 0.18,
                   textShadow: "0 0 12px #a78bfa",
