@@ -1,12 +1,13 @@
 // --- Định nghĩa kiểu dữ liệu ---
-export interface Item {
-  id: string;
-  name: string;
-  imagePath: string;
-  groupId: string;
+// types.ts
+export interface GameItem {
+  id: string | number;
+  image: string;
+  keyword: string;
+  minAppearances?: number;
 }
-export interface Group {
-  id: string;
-  name: string;
-  imagePath: string;
+
+export interface AppData {
+  items: GameItem[];
+  cardBack: string;
 }
