@@ -354,7 +354,7 @@ function QuestionCard({
 
         <ImagePicker
           projectDir={projectDir}
-          entityId={question.id}
+          desiredNamePrefix={question.id}
           value={question.imagePath}
           onChange={(p) => onUpdate(question.id, { imagePath: p })}
           label="Question image"

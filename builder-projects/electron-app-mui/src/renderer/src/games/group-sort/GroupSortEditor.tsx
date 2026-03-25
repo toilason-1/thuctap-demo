@@ -427,7 +427,7 @@ function GroupCard({
       <IndexBadge index={index} color="primary" />
       <ImagePicker
         projectDir={projectDir}
-        entityId={group.id}
+        desiredNamePrefix={group.id}
         value={group.imagePath}
         onChange={(p) => onUpdate(group.id, { imagePath: p })}
         label="Group image"
@@ -558,7 +558,7 @@ function ItemCard({
       <IndexBadge index={index} color="secondary" />
       <ImagePicker
         projectDir={projectDir}
-        entityId={item.id}
+        desiredNamePrefix={item.id}
         value={item.imagePath}
         onChange={(p) => onUpdate(item.id, { imagePath: p })}
         label="Item image"
@@ -694,7 +694,7 @@ function OverviewTab({
                   <IndexBadge index={gIdx} color="primary" />
                   <ImagePicker
                     projectDir={projectDir}
-                    entityId={group.id}
+                    desiredNamePrefix={group.id}
                     value={group.imagePath}
                     onChange={(p) => onUpdateGroup(group.id, { imagePath: p })}
                     label="Image"
@@ -767,7 +767,7 @@ function OverviewTab({
                         <IndexBadge index={iIdx} color="secondary" />
                         <ImagePicker
                           projectDir={projectDir}
-                          entityId={item.id}
+                          desiredNamePrefix={item.id}
                           value={item.imagePath}
                           onChange={(p) => onUpdateItem(item.id, { imagePath: p })}
                           label="Image"
@@ -822,7 +822,7 @@ function OverviewTab({
                     <IndexBadge index={iIdx} color="warning" />
                     <ImagePicker
                       projectDir={projectDir}
-                      entityId={item.id}
+                      desiredNamePrefix={item.id}
                       value={item.imagePath}
                       onChange={(p) => onUpdateItem(item.id, { imagePath: p })}
                       label="Image"

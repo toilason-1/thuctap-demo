@@ -6,7 +6,7 @@ import { useAssetUrl } from '../hooks/useAssetUrl'
 
 interface Props {
   projectDir: string
-  entityId: string
+  desiredNamePrefix: string
   value: string | null
   onChange: (relativePath: string | null) => void
   label?: string
@@ -15,7 +15,7 @@ interface Props {
 
 export default function ImagePicker({
   projectDir,
-  entityId,
+  desiredNamePrefix,
   value,
   onChange,
   label,
@@ -28,7 +28,11 @@ export default function ImagePicker({
   const importFile = async (filePath: string): Promise<void> => {
     setLoading(true)
     try {
-      const relativePath = await window.electronAPI.importImage(filePath, projectDir, entityId)
+      const relativePath = await window.electronAPI.importImage(
+        filePath,
+        projectDir,
+        desiredNamePrefix
+      )
       onChange(relativePath)
     } finally {
       setLoading(false)

@@ -165,7 +165,11 @@ export interface ElectronAPI {
     newFolder: string
   }) => Promise<{ filePath: string; projectDir: string }>
   pickImage: () => Promise<string | null>
-  importImage: (sourcePath: string, projectDir: string, desiredName: string) => Promise<string>
+  importImage: (
+    sourcePath: string,
+    projectDir: string,
+    desiredNamePrefix: string
+  ) => Promise<string>
   resolveAssetUrl: (projectDir: string, relativePath: string) => Promise<string>
   settingsReadGlobal: () => Promise<object>
   settingsWriteGlobal: (data: object) => Promise<boolean>

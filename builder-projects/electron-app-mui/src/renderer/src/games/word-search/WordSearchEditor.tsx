@@ -5,10 +5,10 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import { Alert, Box, Button, Collapse, IconButton, Paper, Tooltip, Typography } from '@mui/material'
 import { useCallback, useState } from 'react'
 import {
+  AtoZWordField,
   DroppableZone,
   EmptyState,
   IndexBadge,
-  NameField,
   SidebarTab,
   StickyHeader,
   useEditorShortcuts
@@ -16,6 +16,7 @@ import {
 import ImagePicker from '../../components/ImagePicker'
 import { useSettings } from '../../context/SettingsContext'
 import { WordSearchAppData, WordSearchItem } from '../../types'
+import { getExcelName } from '../../utils/stringUtils'
 
 interface Props {
   appData: WordSearchAppData
@@ -49,7 +50,7 @@ export default function WordSearchEditor({
       const { id, counter } = nextItemId()
       const i: WordSearchItem = {
         id,
-        word: resolved.prefillNames ? `Word ${counter}` : '',
+        word: resolved.prefillNames ? `WORD${getExcelName(counter)}` : '',
         imagePath: initialImage ?? null
       }
       onChange({ ...data, _itemCounter: counter, items: [...items, i] })
@@ -63,7 +64,7 @@ export default function WordSearchEditor({
       const imagePath = await window.electronAPI.importImage(filePath, projectDir, id)
       const i: WordSearchItem = {
         id,
-        word: resolved.prefillNames ? `Word ${counter}` : '',
+        word: resolved.prefillNames ? `WORD${getExcelName(counter)}` : '',
         imagePath
       }
       onChange({ ...data, _itemCounter: counter, items: [...items, i] })
@@ -91,7 +92,8 @@ export default function WordSearchEditor({
 
   // Basic validation
   const unnamedI = items.filter((i) => !i.word.trim())
-  const hasIssues = unnamedI.length > 0
+  const invalidI = items.filter((i) => i.word.trim() && !/^[A-Z]+$/.test(i.word.trim()))
+  const hasIssues = unnamedI.length > 0 || invalidI.length > 0
 
   return (
     <Box sx={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
@@ -121,7 +123,7 @@ export default function WordSearchEditor({
           icon={<CollectionsIcon fontSize="small" />}
           label="Words"
           badge={items.length}
-          badgeColor={unnamedI.length > 0 ? 'error' : 'default'}
+          badgeColor={hasIssues ? 'error' : 'default'}
         />
         <SidebarTab
           active={tab === 'settings'}
@@ -137,7 +139,12 @@ export default function WordSearchEditor({
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
         <Collapse in={hasIssues}>
           <Alert severity="warning" sx={{ mb: 2, fontSize: '0.8rem' }}>
-            {unnamedI.length > 0 && `${unnamedI.length} item(s) missing a word`}
+            {[
+              unnamedI.length > 0 && `${unnamedI.length} item(s) missing a word`,
+              invalidI.length > 0 && `${invalidI.length} item(s) with invalid characters (A-Z only)`
+            ]
+              .filter(Boolean)
+              .join(' · ')}
           </Alert>
         </Collapse>
 
@@ -250,13 +257,13 @@ function WordCard({
       <IndexBadge index={index} color="primary" />
       <ImagePicker
         projectDir={projectDir}
-        entityId={item.id}
+        desiredNamePrefix={item.id}
         value={item.imagePath}
         onChange={(p) => onUpdate(item.id, { imagePath: p })}
         label="Image"
         size={72}
       />
-      <NameField
+      <AtoZWordField
         label="Word"
         value={item.word}
         onChange={(v) => onUpdate(item.id, { word: v })}
@@ -306,7 +313,7 @@ function SettingsTab({
               </Typography>
               <ImagePicker
                 projectDir={projectDir}
-                entityId="global-background"
+                desiredNamePrefix="global-background"
                 value={data.backgroundImagePath ?? null}
                 onChange={(p) => onChange({ ...data, backgroundImagePath: p })}
                 label="Select Background"

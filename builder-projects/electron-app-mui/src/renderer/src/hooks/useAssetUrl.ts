@@ -9,7 +9,7 @@ export function useAssetUrl(
   relativePath: string | null
 ): UseQueryResult<string> {
   return useQuery({
-    queryKey: ['assets', projectDir, relativePath],
+    queryKey: ['project-assets', projectDir, relativePath],
     queryFn: () => window.electronAPI.resolveAssetUrl(projectDir, relativePath!),
     enabled: !!relativePath, // Don't run if path is null
     staleTime: Infinity // Effectively replaces your manual Map cache

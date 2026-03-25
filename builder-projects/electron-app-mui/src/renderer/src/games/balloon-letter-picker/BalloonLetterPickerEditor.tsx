@@ -16,6 +16,7 @@ import {
 } from '@mui/material'
 import { JSX, useCallback } from 'react'
 import {
+  AtoZWordField,
   DroppableZone,
   EmptyState,
   IndexBadge,
@@ -26,6 +27,7 @@ import {
 import ImagePicker from '../../components/ImagePicker'
 import { useSettings } from '../../context/SettingsContext'
 import { BalloonLetterPickerAppData, BalloonWord } from '../../types'
+import { getExcelName } from '../../utils/stringUtils'
 
 interface Props {
   appData: BalloonLetterPickerAppData
@@ -52,7 +54,7 @@ export default function BalloonLetterPickerEditor({
       const c = data._wordCounter + 1
       const w: BalloonWord = {
         id: `word-${c}`,
-        word: resolved.prefillNames ? `WORD${c}` : '',
+        word: resolved.prefillNames ? `WORD${getExcelName(c)}` : '',
         imagePath: initialImagePath ?? '',
         hint: ''
       }
@@ -70,7 +72,7 @@ export default function BalloonLetterPickerEditor({
       const imagePath = `./${relativePath.replace(/\\/g, '/')}`
       const w: BalloonWord = {
         id,
-        word: resolved.prefillNames ? `WORD${c}` : '',
+        word: resolved.prefillNames ? `WORD${getExcelName(c)}` : '',
         imagePath,
         hint: ''
       }
@@ -289,7 +291,7 @@ function WordCard({
 
         <ImagePicker
           projectDir={projectDir}
-          entityId={word.id}
+          desiredNamePrefix={word.id}
           value={imageRelative}
           onChange={(p) => onImageChange(word.id, p)}
           label="Word image"
@@ -297,64 +299,13 @@ function WordCard({
         />
 
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          {/* Word + letter preview row */}
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-            <TextField
-              label="Word (uppercase letters only)"
-              value={word.word}
-              onChange={(e) => onUpdate(word.id, { word: e.target.value.toUpperCase() })}
-              placeholder="e.g. JUMP"
-              size="small"
-              error={!!isInvalid || !word.word.trim()}
-              helperText={
-                !word.word.trim() ? 'Required' : isInvalid ? 'Only A–Z letters allowed' : ''
-              }
-              inputProps={{ style: { fontFamily: 'monospace', letterSpacing: 4, fontWeight: 700 } }}
-              inputRef={(el) => {
-                if (el && autoFocus) {
-                  setTimeout(() => {
-                    el.focus()
-                    el.select()
-                  }, 30)
-                }
-              }}
-              sx={{ width: 220 }}
-            />
-
-            {/* Letter bubble preview */}
-            {wordText && !isInvalid && (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', pt: 0.5 }}>
-                {wordText.split('').map((ch, i) => (
-                  <Box
-                    key={i}
-                    sx={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: '50%',
-                      background: 'rgba(110,231,183,0.15)',
-                      border: '1px solid rgba(110,231,183,0.35)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      color: 'primary.main',
-                      fontFamily: 'monospace'
-                    }}
-                  >
-                    {ch}
-                  </Box>
-                ))}
-                <Chip
-                  label={`${wordText.length} letter${wordText.length !== 1 ? 's' : ''}`}
-                  size="small"
-                  sx={{ height: 20, fontSize: '0.6rem', ml: 0.5, alignSelf: 'center' }}
-                  color="primary"
-                  variant="outlined"
-                />
-              </Box>
-            )}
-          </Box>
+          <AtoZWordField
+            label="Word (uppercase letters only)"
+            value={word.word}
+            onChange={(v) => onUpdate(word.id, { word: v })}
+            placeholder="e.g. JUMP"
+            autoFocus={autoFocus}
+          />
 
           {/* Hint field */}
           <TextField

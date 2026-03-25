@@ -261,7 +261,7 @@ function PairCard({
       <IndexBadge index={index} color="primary" />
       <ImagePicker
         projectDir={projectDir}
-        entityId={item.id}
+        desiredNamePrefix={item.id}
         value={item.imagePath}
         onChange={(p) => onUpdate(item.id, { imagePath: p })}
         label="Image"
@@ -364,7 +364,7 @@ function SettingsTab({
               </Typography>
               <ImagePicker
                 projectDir={projectDir}
-                entityId="global-card-back"
+                desiredNamePrefix="global-card-back"
                 value={data.cardBackImage ?? null}
                 onChange={(p) => onChange({ ...data, cardBackImage: p })}
                 label="Select Background"
