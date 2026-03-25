@@ -25,8 +25,8 @@ jobs:
             game_id: "balloon-letter-picker"
           - project_path: "template-projects/pair-matching"
             game_id: "pair-matching"
-          # - project_path: "template-projects/word-search" # project la builder ko phai game, ko thay lenh build game
-          #   game_id: "word-search"
+          - project_path: "template-projects/word-search"
+            game_id: "word-search"
 
           # Add more Project A's (Templates) here:
           # - project_path: "apps/mini-game-2"

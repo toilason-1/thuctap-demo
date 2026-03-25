@@ -22,7 +22,7 @@ GAMES=(
   "template-projects/plane-quiz|plane-quiz"
   "template-projects/balloon-letter-picker|balloon-letter-picker"
   "template-projects/pair-matching|pair-matching"
-  # "template-projects/word-search|word-search" # project la builder ko phai game, ko thay lenh build game
+  "template-projects/word-search|word-search"
   # "template-projects/my-new-game|my-new-game"
 )
 
