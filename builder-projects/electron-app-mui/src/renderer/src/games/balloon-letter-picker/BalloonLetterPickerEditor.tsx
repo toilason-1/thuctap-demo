@@ -98,13 +98,6 @@ export default function BalloonLetterPickerEditor({
   // ── Image pick helper (for the inline ImagePicker inside each card) ────────
   // The template stores imagePath as a relative string path (./images/words/foo.png)
   // We handle it by surfacing ImagePicker but mapping its relativePath → imagePath field
-  const handleImageChange = useCallback(
-    (id: string, relativePath: string | null) => {
-      const imagePath = relativePath ? `./${relativePath.replace(/\\/g, '/')}` : ''
-      updateWord(id, { imagePath })
-    },
-    [updateWord]
-  )
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────────
   // Only one unit (word), all tiers do the same
@@ -221,7 +214,6 @@ export default function BalloonLetterPickerEditor({
                 autoFocus={idx === words.length - 1}
                 onUpdate={updateWord}
                 onDelete={deleteWord}
-                onImageChange={handleImageChange}
               />
             ))}
           </Box>
@@ -253,8 +245,7 @@ function WordCard({
   projectDir,
   autoFocus,
   onUpdate,
-  onDelete,
-  onImageChange
+  onDelete
 }: {
   word: BalloonWord
   index: number
@@ -262,7 +253,6 @@ function WordCard({
   autoFocus?: boolean
   onUpdate: (id: string, p: Partial<BalloonWord>) => void
   onDelete: (id: string) => void
-  onImageChange: (id: string, relativePath: string | null) => void
 }): JSX.Element {
   const wordText = word.word.trim().toUpperCase()
   const isInvalid = wordText && !/^[A-Z]+$/.test(wordText)
@@ -272,7 +262,13 @@ function WordCard({
   const imageRelative = word.imagePath ? word.imagePath.replace(/^\.\//, '') : null
 
   return (
-    <FileDropTarget onFileDrop={(fp) => onImageChange(word.id, fp)}>
+    <FileDropTarget
+      onFileDrop={async (fp) => {
+        const rel = await window.electronAPI.importImage(fp, projectDir, word.id)
+        const imagePath = rel ? `./${rel.replace(/\\/g, '/')}` : ''
+        onUpdate(word.id, { imagePath })
+      }}
+    >
       <Paper
         elevation={0}
         sx={{
@@ -294,7 +290,10 @@ function WordCard({
             projectDir={projectDir}
             desiredNamePrefix={word.id}
             value={imageRelative}
-            onChange={(p) => onImageChange(word.id, p)}
+            onChange={(p) => {
+              const imagePath = p ? `./${p.replace(/\\/g, '/')}` : ''
+              onUpdate(word.id, { imagePath })
+            }}
             label="Word image"
             size={80}
           />

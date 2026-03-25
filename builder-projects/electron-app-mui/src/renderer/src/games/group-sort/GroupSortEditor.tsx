@@ -410,7 +410,12 @@ function GroupCard({
   onDelete: (id: string) => void
 }): JSX.Element {
   return (
-    <FileDropTarget onFileDrop={(fp) => onUpdate(group.id, { imagePath: fp })}>
+    <FileDropTarget
+      onFileDrop={async (fp) => {
+        const rel = await window.electronAPI.importImage(fp, projectDir, group.id)
+        onUpdate(group.id, { imagePath: rel })
+      }}
+    >
       <Paper
         elevation={0}
         sx={{
@@ -542,7 +547,12 @@ function ItemCard({
 }): JSX.Element {
   const assigned = groups.find((g) => g.id === item.groupId)
   return (
-    <FileDropTarget onFileDrop={(fp) => onUpdate(item.id, { imagePath: fp })}>
+    <FileDropTarget
+      onFileDrop={async (fp) => {
+        const rel = await window.electronAPI.importImage(fp, projectDir, item.id)
+        onUpdate(item.id, { imagePath: rel })
+      }}
+    >
       <Paper
         elevation={0}
         sx={{
@@ -686,7 +696,12 @@ function OverviewTab({
             const gItems = items.filter((i) => i.groupId === group.id)
             return (
               <Box key={group.id}>
-                <FileDropTarget onFileDrop={(fp) => onUpdateGroup(group.id, { imagePath: fp })}>
+                <FileDropTarget
+                  onFileDrop={async (fp) => {
+                    const rel = await window.electronAPI.importImage(fp, projectDir, group.id)
+                    onUpdateGroup(group.id, { imagePath: rel })
+                  }}
+                >
                   <Paper
                     elevation={0}
                     sx={{
@@ -763,7 +778,10 @@ function OverviewTab({
                     {gItems.map((item, iIdx) => (
                       <FileDropTarget
                         key={item.id}
-                        onFileDrop={(fp) => onUpdateItem(item.id, { imagePath: fp })}
+                        onFileDrop={async (fp) => {
+                          const rel = await window.electronAPI.importImage(fp, projectDir, item.id)
+                          onUpdateItem(item.id, { imagePath: rel })
+                        }}
                       >
                         <Paper
                           elevation={0}
@@ -822,7 +840,10 @@ function OverviewTab({
                 {unassigned.map((item, iIdx) => (
                   <FileDropTarget
                     key={item.id}
-                    onFileDrop={(fp) => onUpdateItem(item.id, { imagePath: fp })}
+                    onFileDrop={async (fp) => {
+                      const rel = await window.electronAPI.importImage(fp, projectDir, item.id)
+                      onUpdateItem(item.id, { imagePath: rel })
+                    }}
                   >
                     <Paper
                       elevation={0}

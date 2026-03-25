@@ -244,7 +244,12 @@ function PairCard({
   onDelete: (id: string) => void
 }): JSX.Element {
   return (
-    <FileDropTarget onFileDrop={(fp) => onUpdate(item.id, { imagePath: fp })}>
+    <FileDropTarget
+      onFileDrop={async (fp) => {
+        const rel = await window.electronAPI.importImage(fp, projectDir, item.id)
+        onUpdate(item.id, { imagePath: rel })
+      }}
+    >
       <Paper
         elevation={0}
         sx={{

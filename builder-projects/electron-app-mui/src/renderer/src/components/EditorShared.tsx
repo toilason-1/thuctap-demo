@@ -298,11 +298,21 @@ export function FileDropTarget({
   disabled?: boolean
 }): JSX.Element {
   const { getRootProps, isDragActive } = useDropzone({
-    onDrop: (acceptedFiles) => {
-      const file = acceptedFiles.find((f) => f.type.startsWith('image/'))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onDrop: (acceptedFiles: any[], _rejections, event: any) => {
+      // Prevent bubbling to parents (e.g. from item card to group card)
+      event?.stopPropagation()
+      const file = acceptedFiles.find((f) => f.type?.startsWith('image/'))
       if (file) {
         onFileDrop(window.electronAPI.getPathForFile(file))
       }
+    },
+    onDragEnter: (e) => e.stopPropagation(),
+    onDragOver: (e) => e.stopPropagation(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getFilesFromEvent: (event: any): any => {
+      const files = event.dataTransfer?.files
+      return files ? Array.from(files) : []
     },
     noClick: true, // Let children handle clicks (e.g. Buttons)
     disabled,

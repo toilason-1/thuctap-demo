@@ -338,7 +338,12 @@ function QuestionCard({
   const isSingle = !question.multipleCorrect
 
   return (
-    <FileDropTarget onFileDrop={(fp) => onUpdate(question.id, { imagePath: fp })}>
+    <FileDropTarget
+      onFileDrop={async (fp) => {
+        const rel = await window.electronAPI.importImage(fp, projectDir, question.id)
+        onUpdate(question.id, { imagePath: rel })
+      }}
+    >
       <Paper
         elevation={0}
         sx={{

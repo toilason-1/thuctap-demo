@@ -23,7 +23,6 @@ export default function ImagePicker({
   size = 100
 }: Props): React.ReactElement {
   const [loading, setLoading] = useState(false)
-  // const [dragOver, setDragOver] = useState(false)
   const { data: url } = useAssetUrl(projectDir, value)
 
   const importFile = async (filePath: string): Promise<void> => {
@@ -52,11 +51,20 @@ export default function ImagePicker({
 
   // ── Drag & drop support ──────────────────────────────────────────────────
   const { getRootProps, isDragActive } = useDropzone({
-    onDrop: (acceptedFiles) => {
-      const file = acceptedFiles.find((f) => f.type.startsWith('image/'))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onDrop: (acceptedFiles: any[], _rejections, event: any) => {
+      event?.stopPropagation()
+      const file = acceptedFiles.find((f) => f.type?.startsWith('image/'))
       if (file) {
         importFile(window.electronAPI.getPathForFile(file))
       }
+    },
+    onDragEnter: (e) => e.stopPropagation(),
+    onDragOver: (e) => e.stopPropagation(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getFilesFromEvent: (event: any): any => {
+      const files = event.dataTransfer?.files
+      return files ? Array.from(files) : []
     },
     disabled: loading,
     accept: { 'image/*': [] }
