@@ -110,7 +110,7 @@ function purgeUnusedAssets(projectDir: string, projectData: object): void {
 
 function injectAppData(html: string, appData: object): string {
   const scriptTag = `<script>window.APP_DATA = ${JSON.stringify(appData)};window.MY_APP_DATA=window.APP_DATA;window.win={DATA:window.APP_DATA}</script>`
-  return html.replace(/<script/, scriptTag + '\n<script')
+  return html.replace(/<script/, `${scriptTag}\n<script`)
 }
 
 function normalizeAssetPaths(obj: unknown, projectDir: string): unknown {
@@ -173,9 +173,13 @@ const projectPreviewSessions = new Map<string, { html: string; gameDir: string }
 
 app.whenReady().then(() => {
   protocol.handle('preview-project', async (request) => {
+    console.log(`Protocol request received:`, request.url)
+    console.log(`Available sessions:`, Array.from(projectPreviewSessions.keys()))
+
     const url = new URL(request.url)
     const sessionId = url.hostname // e.g., session-12345
     const pathName = url.pathname // e.g., /index.html or /css/style.css
+    console.log(`Protocol request: ${request.url}`, { sessionId, pathName })
 
     const session = projectPreviewSessions.get(sessionId)
     if (!session) return new Response('Session expired', { status: 404 })
@@ -352,11 +356,26 @@ ipcMain.handle('preview-project', async (_, opts) => {
   const injectedHtml = injectAppData(fs.readFileSync(htmlPath, 'utf-8'), templateData)
 
   // Unique ID for this specific window instance
-  const sessionId = `session-${Date.now()}-${Math.random()}`
+  const sessionId = `session-${Date.now()}-${crypto.randomUUID()}`
+
+  const devInjectedHtml = injectedHtml.replace(
+    '</body>',
+    `<script>
+    window.__PREVIEW_DEBUG__ = {
+      sessionId: '${sessionId}',
+      templateId: '${templateId}',
+      gameDir: '${gameDir}',
+      projectDir: '${projectDir}',
+      timestamp: ${Date.now()},
+      appData: ${JSON.stringify(appData)}
+    };
+    </script>
+    </body>`
+  )
 
   // Save both the content AND the path so the protocol knows where to look for assets
   projectPreviewSessions.set(sessionId, {
-    html: injectedHtml,
+    html: devInjectedHtml,
     gameDir: gameDir
   })
 
@@ -368,6 +387,8 @@ ipcMain.handle('preview-project', async (_, opts) => {
       webSecurity: false // Required to let preview-project:// load file:// assets
     }
   })
+
+  previewWindow.webContents.openDevTools()
 
   previewWindow.loadURL(`preview-project://${sessionId}/index.html`)
 
