@@ -262,23 +262,27 @@ function QuestionCard({
   onUpdate: (id: string, p: Partial<WhackAMoleQuestion>) => void
   onDelete: (id: string) => void
 }): React.ReactElement {
+  // Column widths for grid alignment
+  const badgeWidth = 26 // IndexBadge width
+  const imageWidth = 80 // ImagePicker size
+
   return (
-    <FileDropTarget
-      onFileDrop={async (fp) => {
-        const rel = await window.electronAPI.importImage(fp, projectDir, question.id)
-        onUpdate(question.id, { questionImage: rel })
+    <Paper
+      elevation={0}
+      sx={{
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: 2,
+        background: '#1a1d27',
+        overflow: 'hidden'
       }}
     >
-      <Paper
-        elevation={0}
-        sx={{
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: 2,
-          background: '#1a1d27',
-          overflow: 'hidden'
+      {/* Question section */}
+      <FileDropTarget
+        onFileDrop={async (fp) => {
+          const rel = await window.electronAPI.importImage(fp, projectDir, question.id)
+          onUpdate(question.id, { questionImage: rel })
         }}
       >
-        {/* Question section */}
         <Box sx={{ p: 2, display: 'flex', alignItems: 'flex-start', gap: 2 }}>
           <IndexBadge index={index} color="primary" />
 
@@ -315,27 +319,39 @@ function QuestionCard({
             </IconButton>
           </Tooltip>
         </Box>
+      </FileDropTarget>
 
-        {/* Answer section */}
+      {/* Answer section */}
+      <Box
+        sx={{
+          px: 2,
+          pb: 2,
+          borderTop: '1px solid rgba(255,255,255,0.06)'
+        }}
+      >
+        {/* Grid layout for alignment: badge | image | content */}
         <Box
           sx={{
-            px: 2,
-            pb: 2,
-            pl: '88px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 1.5,
-            borderTop: '1px solid rgba(255,255,255,0.06)'
+            display: 'grid',
+            gridTemplateColumns: `${badgeWidth}px ${imageWidth}px 1fr`,
+            gap: 2,
+            alignItems: 'start'
           }}
         >
-          <Typography
-            variant="overline"
-            sx={{ fontSize: '0.6rem', letterSpacing: 2, color: 'text.disabled' }}
-          >
-            Correct Answer (the mole students should whack)
-          </Typography>
+          {/* Empty cell for badge alignment */}
+          <Box />
 
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+          {/* Answer image with its own drop target */}
+          <FileDropTarget
+            onFileDrop={async (fp) => {
+              const rel = await window.electronAPI.importImage(
+                fp,
+                projectDir,
+                `${question.id}-answer`
+              )
+              onUpdate(question.id, { answerImage: rel })
+            }}
+          >
             <ImagePicker
               projectDir={projectDir}
               desiredNamePrefix={`${question.id}-answer`}
@@ -344,23 +360,30 @@ function QuestionCard({
               label="Answer image"
               size={80}
             />
+          </FileDropTarget>
 
-            <Box sx={{ flex: 1 }}>
-              <NameField
-                label="Answer text"
-                value={question.answerText}
-                onChange={(v) => onUpdate(question.id, { answerText: v })}
-                placeholder="e.g. Dưới đất"
-                autoFocus={false}
-              />
-              <Typography variant="caption" color="text.secondary">
-                This is the correct answer. In the game, this mole will appear among other decoy
-                moles.
-              </Typography>
-            </Box>
+          {/* Answer content */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Typography
+              variant="overline"
+              sx={{ fontSize: '0.6rem', letterSpacing: 2, color: 'text.disabled' }}
+            >
+              Correct Answer (the mole students should whack)
+            </Typography>
+            <NameField
+              label="Answer text"
+              value={question.answerText}
+              onChange={(v) => onUpdate(question.id, { answerText: v })}
+              placeholder="e.g. Dưới đất"
+              autoFocus={false}
+            />
+            <Typography variant="caption" color="text.secondary">
+              This is the correct answer. In the game, this mole will appear among other decoy
+              moles.
+            </Typography>
           </Box>
         </Box>
-      </Paper>
-    </FileDropTarget>
+      </Box>
+    </Paper>
   )
 }
