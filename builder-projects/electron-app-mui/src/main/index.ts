@@ -2,9 +2,9 @@ import archiver from 'archiver'
 import { app, BrowserWindow, dialog, net, protocol, shell } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
+import type { AnyAppData, FolderStatus, GameTemplate, GlobalSettings, ProjectFile } from '../shared'
 import { prepareAppDataForTemplate } from './gameRegistry'
 import { createHandler } from './ipc-handlers'
-import type { GameTemplate, FolderStatus, GlobalSettings, ProjectFile, AnyAppData } from '../shared'
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -263,7 +263,10 @@ createHandler('open-project-file', async (_e, filePath?: string) => {
     resolved = result.filePaths[0]
   }
   const content = fs.readFileSync(resolved, 'utf-8')
-  return { filePath: resolved, data: JSON.parse(content) } as { filePath: string; data: ProjectFile }
+  return { filePath: resolved, data: JSON.parse(content) } as {
+    filePath: string
+    data: ProjectFile
+  }
 })
 
 createHandler('save-project', async (_e, projectData: object, projectPath: string) => {
@@ -463,9 +466,13 @@ async function exportToZip(
     output.on('close', resolve)
     archive.on('error', reject)
     archive.pipe(output)
-    // Add all game resources
-    archive.directory(gameDir, false)
-    // Overwrite index.html with injected version
+    // Add all game resources except root index.html
+    archive.directory(gameDir, false, (entry) => {
+      // Only exclude index.html at the root level
+      if (entry.name === 'index.html') return false
+      return entry
+    })
+    // Add injected index.html
     archive.append(injectedHtml, { name: 'index.html' })
     // Add project assets
     const assetsDir = path.join(projectDir, 'assets')

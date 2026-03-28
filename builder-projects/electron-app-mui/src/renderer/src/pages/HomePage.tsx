@@ -26,25 +26,11 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
+import { timeRelative } from '@renderer/utils/stringUtils'
 import { JSX, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GAME_REGISTRY } from '../games/registry'
 import { GameTemplate, GlobalSettings, RecentProject } from '../types'
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'Just now'
-  if (mins < 60) return `${mins} minute${mins > 1 ? 's' : ''} ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''} ago`
-  const days = Math.floor(hrs / 24)
-  if (days < 30) return `${days} day${days > 1 ? 's' : ''} ago`
-  const mos = Math.floor(days / 30)
-  if (mos < 12) return `${mos} month${mos > 1 ? 's' : ''} ago`
-  return `${Math.floor(mos / 12)} year${Math.floor(mos / 12) > 1 ? 's' : ''} ago`
-}
 
 async function readRecentProjects(): Promise<RecentProject[]> {
   const s = await window.electronAPI.settingsReadGlobal()
@@ -296,7 +282,7 @@ export default function HomePage(): JSX.Element {
                         color="text.disabled"
                         sx={{ fontSize: '0.7rem' }}
                       >
-                        Opened {timeAgo(r.lastOpened)}
+                        Opened {timeRelative(r.lastOpened)}
                       </Typography>
                     </Box>
                     <Tooltip title={r.filePath}>
@@ -362,7 +348,7 @@ export default function HomePage(): JSX.Element {
           sx={{
             mt: 2,
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
             gap: 2
           }}
         >
