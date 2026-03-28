@@ -6,11 +6,6 @@ import type { AnyAppData, FolderStatus, GameTemplate, GlobalSettings, ProjectFil
 import { prepareAppDataForTemplate } from './gameRegistry'
 import { createHandler } from './ipc-handlers'
 import { migrateProjectFile } from '../shared/migrations'
-import log from 'electron-log'
-
-log.initialize()
-log.info('Main process starting...')
-Object.assign(console, log.functions)
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -223,21 +218,19 @@ const projectPreviewSessions = new Map<string, { html: string; gameDir: string }
 
 app.whenReady().then(() => {
   protocol.handle('preview-project', async (request) => {
-    log.debug(`Protocol request received: ${request.url}`)
+    console.log(`Protocol request received:`, request.url)
+    console.log(`Available sessions:`, Array.from(projectPreviewSessions.keys()))
 
     const url = new URL(request.url)
     const sessionId = url.hostname // e.g., session-12345
     const pathName = url.pathname // e.g., /index.html or /css/style.css
 
     const session = projectPreviewSessions.get(sessionId)
-    if (!session) {
-      log.error(`Session expired or not found: ${sessionId}`)
-      return new Response('Session expired', { status: 404 })
-    }
+    if (!session) return new Response('Session expired', { status: 404 })
 
     // Serve HTML from memory
     if (pathName === '/' || pathName === '/index.html') {
-      log.debug(`Serving HTML from memory: ${pathName}`)
+      console.log(`Serving HTML from memory: ${pathName}`)
       return new Response(session.html, {
         headers: { 'Content-Type': 'text/html' }
       })
@@ -245,7 +238,7 @@ app.whenReady().then(() => {
 
     // Serve assets from the specific directory saved for THIS session
     const filePath = path.join(session.gameDir, pathName)
-    log.debug(`Serving assets from filePath: ${filePath}`)
+    console.log(`Serving assets from filePath: ${filePath}`)
     return net.fetch(`file://${filePath}`)
   })
 

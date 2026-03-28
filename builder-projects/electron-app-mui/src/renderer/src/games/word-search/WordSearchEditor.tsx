@@ -3,8 +3,8 @@ import CollectionsIcon from '@mui/icons-material/Collections'
 import DeleteIcon from '@mui/icons-material/Delete'
 import SettingsIcon from '@mui/icons-material/Settings'
 import { Alert, Box, Button, Collapse, IconButton, Paper, Tooltip, Typography } from '@mui/material'
-import log from 'electron-log/renderer'
-import { useCallback, useEffect, useState } from 'react'
+import { useEditorShortcuts } from '@renderer/hooks/useEditorShortcuts'
+import { useCallback, useState } from 'react'
 import {
   AtoZWordField,
   EmptyState,
@@ -86,14 +86,9 @@ export default function WordSearchEditor({
     [data, items, onChange]
   )
 
-  useEffect(() => {
-    const handler = (): void => {
-      log.debug('WordSearchEditor: Received add-entity')
-      addItem()
-    }
-    window.addEventListener('editor-add-entity', handler)
-    return () => window.removeEventListener('editor-add-entity', handler)
-  }, [addItem])
+  useEditorShortcuts(() => {
+    addItem()
+  })
 
   // Basic validation
   const unnamedI = items.filter((i) => !i.word.trim())
