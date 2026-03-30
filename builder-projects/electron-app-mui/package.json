@@ -68,31 +68,5 @@
     "typescript": "^5.9.3",
     "vite": "^8.0.0"
   },
-  "build": {
-    "appId": "com.iclc.gamemaker",
-    "productName": "I-CLC Game maker",
-    "asar": true,
-    "files": [
-      "out/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "templates",
-        "to": "templates"
-      }
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "resources/icons/win/icon.ico"
-    },
-    "mac": {
-      "target": "dmg",
-      "icon": "resources/icons/mac/icon.icns"
-    },
-    "linux": {
-      "target": "AppImage",
-      "icon": "resources/icons/png"
-    }
-  },
   "packageManager": "yarn@4.13.0"
 }
