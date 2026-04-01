@@ -92,21 +92,30 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
   const [isDirty, setIsDirty] = useState(false)
   const [templates, setTemplates] = useState<GameTemplate[]>([])
 
-  // History with debounced pushes - `current` is immediately updated for UI responsiveness
   const {
     present: appData,
     setPresent: setAppData,
     controls: historyControls,
     canBack,
     canForward,
+    position,
     store
   } = useProjectHistory()
   const storeRef = useRef<HistoryStore>(store)
+  const lastPositionRef = useRef(position)
 
   // Keep store ref updated
   useEffect(() => {
     storeRef.current = store
   }, [store])
+
+  // Mark as dirty when undo/redo changes the position
+  useEffect(() => {
+    if (position !== lastPositionRef.current) {
+      setIsDirty(true)
+      lastPositionRef.current = position
+    }
+  }, [position])
 
   // Load templates list for display names
   useEffect(() => {
@@ -160,7 +169,6 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
     const file = buildProjectFile(currentMeta, appDataToSave)
     // Pass full history array for asset purging
     const history = getHistoryArray(storeRef.current!)
-    console.log(file, currentMeta.filePath, history)
     await window.electronAPI.saveProject(file, currentMeta.filePath, history)
     setIsDirty(false)
   }, [])

@@ -1,4 +1,3 @@
-import { rawReturn } from 'mutative'
 import { createContext, useContext, useState, type ReactNode } from 'react'
 import { createStore, useStore } from 'zustand'
 import { travel } from 'zustand-travel'
@@ -21,7 +20,9 @@ const createHistoryStore = (initialState: AnyAppData) => {
       (set) => ({
         data: { ...initialState },
         setPresent: (newState: AnyAppData) => {
-          set(() => rawReturn({ data: newState }))
+          set((state) => {
+            state.data = newState
+          })
         }
       }),
       {
@@ -65,8 +66,8 @@ export function useProjectHistory() {
   }
 
   // Subscribe to store changes - triggers re-renders when state changes
-  const state = useStore(store, (s) => s)
   const present = useStore(store, (s) => s.data)
+  const setPresent = useStore(store, (s) => s.setPresent)
 
   // Get travel controls (stable reference)
   const controls = store.getControls()
@@ -78,7 +79,7 @@ export function useProjectHistory() {
 
   return {
     present,
-    setPresent: state.setPresent,
+    setPresent,
     controls,
     store,
     canBack,
@@ -94,5 +95,7 @@ export function useProjectHistory() {
  */
 export function getHistoryArray(store: HistoryStore): AnyAppData[] {
   const controls = store.getControls()
-  return controls.getHistory() as unknown as AnyAppData[]
+  controls.getHistory()
+  const history = controls.getHistory() as unknown as Array<{ data: AnyAppData }>
+  return history.map((entry) => entry.data)
 }
