@@ -70,36 +70,43 @@ export function useProjectHistory() {
 
   // Subscribe to store changes - triggers re-renders when state changes
   const present = useStore(store, (s) => s.data)
-  const setPresent = useStore(store, (s) => s.setPresent)
+  
+  const { setPresent } = store.getState()
 
-  // Get travel controls (stable reference)
-  const controls = store.getControls()
+  // Get travel controls, stable
+  const { back, forward, reset, getHistory, canBack, canForward } = store.getControls()
 
   // Subscribe to control state changes for reactive UI
-  const canBack = useStore(store, () => controls.canBack())
-  const canForward = useStore(store, () => controls.canForward())
-  const position = useStore(store, () => controls.position)
+  const isCanBack = useStore(store, () => canBack())
+  const isCanForward = useStore(store, () => canForward())
+  const position = useStore(store, () => store.getControls().position)
 
   return {
     present,
     setPresent,
-    controls,
-    store,
-    canBack,
-    canForward,
+    undo: back,
+    redo: forward,
+    getHistory,
+    reset,
+    canUndo: isCanBack,
+    canRedo: isCanForward,
     position
   }
 }
 
 // ── Helper: Get full history array ────────────────────────────────────────────
 /**
- * Get the full history array from travel controls.
+ * Get the full history array from history array getHistory.
  * Returns deep copies to prevent accidental mutation of history state.
  * Useful for saving/exporting the complete undo/redo stack.
  */
-export function getHistoryArray(store: HistoryStore): AnyAppData[] {
-  const controls = store.getControls()
-  const history = controls.getHistory() as unknown as Array<{ data: AnyAppData }>
+export function getHistoryArray(
+  history: ReturnType<ReturnType<HistoryStore['getControls']>['getHistory']>
+): AnyAppData[] {
   // Deep copy each entry to prevent mutation of history state
-  return history.map((entry) => structuredClone(entry.data))
+  // It says entry is type (parameter) entry: StoreApi<{
+  //     data: AnyAppData;
+  //     setPresent: (newState: AnyAppData) => void;
+  // }> but in runtime it actually is just the state object
+  return history.map((entry) => structuredClone((entry as unknown as { data: AnyAppData }).data))
 }

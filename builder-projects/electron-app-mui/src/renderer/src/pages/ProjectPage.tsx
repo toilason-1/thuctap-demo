@@ -36,8 +36,7 @@ import SettingsPanel from '../components/SettingsPanel'
 import {
   getHistoryArray,
   ProjectHistoryProvider,
-  useProjectHistory,
-  type HistoryStore
+  useProjectHistory
 } from '../context/ProjectHistoryContext'
 import { useSettings } from '../context/SettingsContext'
 import { GAME_REGISTRY } from '../games/registry'
@@ -99,27 +98,23 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
   const {
     present: appData,
     setPresent: setAppData,
-    controls: historyControls,
-    canBack,
-    canForward,
-    position,
-    store
+    undo: historyUndo,
+    redo: historyRedo,
+    getHistory,
+    canUndo,
+    canRedo
   } = useProjectHistory()
-  const storeRef = useRef<HistoryStore>(store)
-  const lastPositionRef = useRef(position)
 
-  // Keep store ref updated
-  useEffect(() => {
-    storeRef.current = store
-  }, [store])
+  // Wrapped undo/redo that marks document as dirty
+  const handleUndo = useCallback(() => {
+    historyUndo()
+    setIsDirty(true)
+  }, [historyUndo])
 
-  // Mark as dirty when undo/redo changes the position
-  useEffect(() => {
-    if (position !== lastPositionRef.current) {
-      setIsDirty(true)
-      lastPositionRef.current = position
-    }
-  }, [position])
+  const handleRedo = useCallback(() => {
+    historyRedo()
+    setIsDirty(true)
+  }, [historyRedo])
 
   // Load templates list for display names
   useEffect(() => {
@@ -177,7 +172,7 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
   // ── Save ─────────────────────────────────────────────────────────────────
   const doSave = useCallback(async (currentMeta: ProjectMeta, appDataToSave: AnyAppData) => {
     const file = buildProjectFile(currentMeta, appDataToSave)
-    const history = getHistoryArray(storeRef.current!)
+    const history = getHistoryArray(getHistory())
     await window.electronAPI.saveProject(file, currentMeta.filePath, history)
     setIsDirty(false)
   }, [])
@@ -186,7 +181,7 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
     async (folder: string): Promise<void> => {
       if (!meta) return
       try {
-        const history = getHistoryArray(storeRef.current!)
+        const history = getHistoryArray(getHistory())
         const newLoc = await window.electronAPI.doSaveAs({
           projectData: buildProjectFile(meta, appData),
           oldProjectDir: meta.projectDir,
@@ -345,8 +340,8 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
   // ── Keyboard shortcuts ────────────────────────────────────────────────────
   useProjectShortcuts({
     // Navigation
-    onUndo: canBack ? () => historyControls.back() : undefined,
-    onRedo: canForward ? () => historyControls.forward() : undefined,
+    onUndo: canUndo ? handleUndo : undefined,
+    onRedo: canRedo ? handleRedo : undefined,
 
     // File operations
     onSave: handleSave,
@@ -450,18 +445,14 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
         <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
           <Tooltip title="Undo (Ctrl+Z)">
             <span>
-              <IconButton size="small" onClick={() => historyControls.back()} disabled={!canBack}>
+              <IconButton size="small" onClick={handleUndo} disabled={!canUndo}>
                 <UndoIcon fontSize="small" />
               </IconButton>
             </span>
           </Tooltip>
           <Tooltip title="Redo (Ctrl+Y)">
             <span>
-              <IconButton
-                size="small"
-                onClick={() => historyControls.forward()}
-                disabled={!canForward}
-              >
+              <IconButton size="small" onClick={handleRedo} disabled={!canRedo}>
                 <RedoIcon fontSize="small" />
               </IconButton>
             </span>
