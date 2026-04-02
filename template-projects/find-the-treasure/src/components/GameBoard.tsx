@@ -3,13 +3,13 @@ import type { MascotMood, Stage, StageResult } from '../types'
 import { Mascot } from './Mascot'
 
 const islandImages = [
-  '/images/island_1.svg',
-  '/images/island_2.svg',
-  '/images/island_3.svg',
-  '/images/island_4.svg',
-  '/images/island_5.svg',
+  'assets/images/island_1.svg',
+  'assets/images/island_2.svg',
+  'assets/images/island_3.svg',
+  'assets/images/island_4.svg',
+  'assets/images/island_5.svg',
 ]
-const moneyChest = '/images/moneychest.svg'
+const moneyChest = 'assets/images/moneychest.svg'
 const ISLAND_NODE_WIDTH = 122
 const ISLAND_ART_SIZE = 70
 const ISLAND_ROUTE_OFFSET = 33
