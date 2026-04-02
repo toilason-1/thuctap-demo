@@ -81,12 +81,41 @@ cp -r template-projects/group-sort template-projects/my-new-game
 
 ### Build Output Requirements
 
-| File                 | Requirement                                                                                                                        |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `index.html`         | **Single-file HTML** — all JS and CSS must be inlined. Use `vite-plugin-singlefile` (or equivalent) to achieve this.               |
-| `images/` (optional) | Image assets that cannot be inlined. Keep the file count minimal. The builder will copy these alongside the exported `index.html`. |
+The built game template must follow this exact structure:
 
-> ⚠️ **No other asset types should be emitted.** Fonts, icons, and small SVGs should be inlined into the HTML.
+```
+<game-id>/
+├── index.html              # Single-file HTML at root — all JS and CSS must be inlined
+└── assets/                 # Single assets folder next to index.html
+    ├── sounds/             # Audio files (optional)
+    ├── images/             # Image assets that cannot be inlined
+    │   ├── logo.png        # Required: Game logo
+    │   ├── banner.png      # Required: Game banner
+    │   └── icons/          # Required: Multi-sized icons
+    │       ├── 16x16.png
+    │       ├── 32x32.png
+    │       ├── 48x48.png
+    │       ├── 64x64.png
+    │       ├── 128x128.png
+    │       ├── 256x256.png
+    │       ├── 512x512.png
+    │       └── 1024x1024.png
+```
+
+> ⚠️ **The `assets/user/` folder must NOT exist in game templates.** This folder is created and populated by the builder when teachers export their projects. Template authors should not create or use this folder.
+
+| File/Folder              | Requirement                                                                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `index.html`             | **Single-file HTML** — all JS and CSS must be inlined. Use `vite-plugin-singlefile` (or equivalent) to achieve this.            |
+| `assets/`                | **Required folder** containing all assets. Must be named exactly `assets`.                                                      |
+| `assets/sounds/`         | Optional audio files. Can be omitted if the game has no sounds.                                                                 |
+| `assets/images/`         | **Required folder** for image assets that cannot be inlined.                                                                    |
+| `assets/images/logo.png` | **Required** — Game logo image.                                                                                                 |
+| `assets/images/banner.png` | **Required** — Game banner image.                                                                                             |
+| `assets/images/icons/`   | **Required folder** containing multi-sized PNG icons for various display contexts.                                              |
+| `assets/images/icons/*.png` | **Required** — Icons at sizes: 16x16, 32x32, 48x48, 64x64, 128x128, 256x256, 512x512, 1024x1024 (all in pixels).              |
+
+> ⚠️ **No other asset types should be emitted at the root level.** Fonts, icons, and small SVGs should be inlined into the HTML. All other assets must be organized inside the `assets/` folder by type.
 
 ### Runtime Data Contract
 
@@ -118,6 +147,70 @@ Each template folder must contain a `meta.json` at the root level (next to `vite
 ```
 
 Optionally place a `thumbnail.png` (or `.jpg`/`.webp`) next to `meta.json` for a preview image on the home screen.
+
+---
+
+## Exported Game Structure
+
+When a teacher exports a game project using the builder, the output follows the same structure as the built game template, with one key difference: the `assets/user/` folder is created and populated with the teacher's custom resources.
+
+### Exported Game Folder Structure
+
+```
+<exported-game-name>/
+├── index.html              # Single-file HTML with teacher's data injected (window.APP_DATA)
+└── assets/
+    ├── sounds/             # Template sounds (if any)
+    ├── images/             # Template images (logo.png, banner.png, icons/)
+    │   ├── logo.png
+    │   ├── banner.png
+    │   └── icons/
+    │       ├── 16x16.png
+    │       ├── 32x32.png
+    │       ├── ...
+    │       └── 1024x1024.png
+    └── user/               # ⭐ Teacher's custom assets (flat structure, no subfolders)
+        ├── item-abc123-1712048532456-0.1234567.png
+        ├── question-def456-1712048533789-0.9876543.jpg
+        ├── group-ghi789-1712048534012-0.4567891.svg
+        ├── word-jkl012-1712048535345-0.7891234.mp3
+        ├── answer-mno345-1712048536678-0.2345678.ogg
+        └── ...             # Any other file type (png, jpg, svg, mp3, ogg, etc.)
+```
+
+### Key Differences from Template Structure
+
+| Aspect | Game Template | Exported Game |
+|--------|---------------|---------------|
+| `assets/user/` | **Must NOT exist** — templates should not create this folder | **Always present** — created by builder, contains teacher's imported assets |
+| `index.html` | Contains placeholder/empty `window.APP_DATA` | Contains **injected teacher data** in `window.APP_DATA` |
+| Purpose | Development & distribution | Ready-to-use standalone game |
+
+### User Assets Folder Details
+
+The `assets/user/` folder has the following characteristics:
+
+- **Flat structure**: All files are stored directly in `assets/user/` with no subfolders
+- **Auto-generated filenames**: Files are renamed using the pattern `<entity-type>-<id>-<timestamp>-<random>`:
+  - `entity-type`: The type of game entity (e.g., `item`, `question`, `group`, `word`, `answer`)
+  - `id`: A unique identifier for the entity
+  - `timestamp`: Unix timestamp when the file was imported
+  - `random`: A random decimal for additional uniqueness
+- **Any file type**: Teachers can upload various file types including:
+  - Images: `.png`, `.jpg`, `.jpeg`, `.svg`, `.webp`, `.gif`
+  - Audio: `.mp3`, `.ogg`, `.wav`, `.aac`
+  - Other: Any file type supported by the game template
+- **No organization by type**: The builder does not separate files into subfolders by type; all user assets are stored flat in `assets/user/`
+
+### How User Assets Are Added
+
+1. **In the Editor**: When a teacher uploads an image, sound, or other resource via the builder's UI, the file is copied to the project's asset directory with a generated filename.
+
+2. **During Export**: The builder copies all files from the project's asset directory into `assets/user/` in the exported folder, preserving the generated filenames.
+
+3. **At Runtime**: The game template loads user assets via relative paths stored in `window.APP_DATA`, e.g., `./assets/user/item-abc123-1712048532456-0.1234567.png`.
+
+> 💡 **Note**: The exported game is a **self-contained folder** that works offline in any modern browser. No server or build process is required — just open the `index.html` file.
 
 ---
 

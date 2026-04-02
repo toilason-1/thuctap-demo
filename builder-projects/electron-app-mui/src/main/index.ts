@@ -540,7 +540,7 @@ async function exportToZip(
       for (const file of usedFiles) {
         const filePath = path.join(srcAssetsDir, file)
         if (fs.existsSync(filePath)) {
-          archive.file(filePath, { name: `assets/${file}` })
+          archive.file(filePath, { name: `assets/user/${file}` })
         }
       }
     }
