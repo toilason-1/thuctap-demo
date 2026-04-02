@@ -18,7 +18,8 @@ import type {
   PairMatchingAppData,
   QuizAppData,
   WhackAMoleAppData,
-  WordSearchAppData
+  WordSearchAppData,
+  LabelledDiagramAppData
 } from '../shared'
 
 export type DataTransform = (appData: AnyAppData) => object
@@ -172,6 +173,16 @@ export const GAME_DATA_TRANSFORMS: Record<string, DataTransform> = {
     )
 
     return omitInternalKeys(questions)
+  },
+
+  // Labelled Diagram
+  'labelled-diagram': (appData) => {
+    const data = appData as LabelledDiagramAppData
+
+    return omitInternalKeys({
+      imagePath: data.imagePath,
+      points: data.points
+    })
   }
 }
 
