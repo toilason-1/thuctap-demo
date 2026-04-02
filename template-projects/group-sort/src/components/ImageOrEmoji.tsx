@@ -27,7 +27,13 @@ export const ImageOrEmoji: React.FC<ImageOrEmojiProps> = ({
     );
   }
   const sizeClass =
-    size === "large" ? "w-24 h-24" : size === "medium" ? "w-24 h-24" : size === "small" ? "w-20 h-20" : "w-16 h-16";
+    size === "large"
+      ? "w-24 h-24"
+      : size === "medium"
+        ? "w-24 h-24"
+        : size === "small"
+          ? "w-20 h-20"
+          : "w-16 h-16";
   return (
     <img src={imagePath} alt={alt} className={`${sizeClass} object-contain`} />
   );

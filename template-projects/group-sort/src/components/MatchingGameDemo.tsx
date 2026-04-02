@@ -20,14 +20,20 @@ import { ImageOrEmoji } from "./ImageOrEmoji";
 import { shuffleGroups, shuffleItems } from "../utils";
 
 const MatchingGameDemo: React.FC = () => {
-  const [unansweredItems, setUnansweredItems] = useState<Item[]>(
-    () => shuffleItems(MY_APP_DATA.items),
+  // Settings state (must be before other state that depends on it)
+  const [showSettings, setShowSettings] = useState(false);
+  const [randomizeItems, setRandomizeItems] = useState(true);
+  const [randomizeGroups, setRandomizeGroups] = useState(true);
+  const settingsTimeoutRef = useRef<number | null>(null);
+
+  const [unansweredItems, setUnansweredItems] = useState<Item[]>(() =>
+    randomizeItems ? shuffleItems(MY_APP_DATA.items) : MY_APP_DATA.items,
   );
-  const [groupedItems, setGroupedItems] = useState<Record<string, Item[]>>(
-    () => Object.fromEntries(MY_APP_DATA.groups.map((g) => [g.id, []])),
+  const [groupedItems, setGroupedItems] = useState<Record<string, Item[]>>(() =>
+    Object.fromEntries(MY_APP_DATA.groups.map((g) => [g.id, []])),
   );
-  const [groups, setGroups] = useState<Group[]>(
-    () => shuffleGroups(MY_APP_DATA.groups),
+  const [groups, setGroups] = useState<Group[]>(() =>
+    randomizeGroups ? shuffleGroups(MY_APP_DATA.groups) : MY_APP_DATA.groups,
   );
   const [activeItem, setActiveItem] = useState<Item | null>(null);
   const [feedback, setFeedback] = useState<{
@@ -40,6 +46,19 @@ const MatchingGameDemo: React.FC = () => {
 
   // Use ref to manage feedback timeout
   const feedbackTimeoutRef = useRef<number | null>(null);
+
+  // Ref for group area scroll container
+  const groupAreaRef = useRef<HTMLDivElement | null>(null);
+
+  // Handle wheel event on group area - only scrolls horizontally if event bubbles up
+  // (meaning no child column captured the vertical scroll)
+  const handleGroupAreaWheel = (e: React.WheelEvent) => {
+    if (e.shiftKey) return; // Let default shift+scroll handle horizontal
+    e.preventDefault();
+    if (groupAreaRef.current) {
+      groupAreaRef.current.scrollLeft += e.deltaY;
+    }
+  };
 
   // Cấu hình Sensor để không bị xung đột với scroll trên mobile
   const sensors = useSensors(
@@ -93,7 +112,9 @@ const MatchingGameDemo: React.FC = () => {
 
   const handleRetry = () => {
     // First, return all items back to sidebar (this triggers layout animation)
-    setUnansweredItems(shuffleItems(MY_APP_DATA.items));
+    setUnansweredItems(
+      randomizeItems ? shuffleItems(MY_APP_DATA.items) : MY_APP_DATA.items,
+    );
     setGroupedItems(
       Object.fromEntries(MY_APP_DATA.groups.map((g) => [g.id, []])),
     );
@@ -104,9 +125,11 @@ const MatchingGameDemo: React.FC = () => {
       feedbackTimeoutRef.current = null;
     }
     // Shuffle groups after a delay to allow items to fly back first
-    setTimeout(() => {
-      setGroups(shuffleGroups(MY_APP_DATA.groups));
-    }, 500);
+    if (randomizeGroups) {
+      setTimeout(() => {
+        setGroups(shuffleGroups(MY_APP_DATA.groups));
+      }, 500);
+    }
   };
 
   // Calculate summary data
@@ -283,6 +306,93 @@ const MatchingGameDemo: React.FC = () => {
             Ghép Đôi Vui Vẻ
           </h1>
           <div className="flex items-center gap-4">
+            {/* Settings button with hover panel */}
+            <div
+              className="relative"
+              onMouseEnter={() => {
+                if (settingsTimeoutRef.current) {
+                  clearTimeout(settingsTimeoutRef.current);
+                  settingsTimeoutRef.current = null;
+                }
+                setShowSettings(true);
+              }}
+              onMouseLeave={() => {
+                settingsTimeoutRef.current = window.setTimeout(() => {
+                  setShowSettings(false);
+                  settingsTimeoutRef.current = null;
+                }, 300);
+              }}
+            >
+              <button className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-full shadow-md transition-colors">
+                ⚙️ Cài đặt
+              </button>
+
+              {/* Settings panel */}
+              <AnimatePresence>
+                {showSettings && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border-2 border-purple-200 p-4 z-50 min-w-[280px]"
+                    onMouseEnter={() => {
+                      if (settingsTimeoutRef.current) {
+                        clearTimeout(settingsTimeoutRef.current);
+                        settingsTimeoutRef.current = null;
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      settingsTimeoutRef.current = window.setTimeout(() => {
+                        setShowSettings(false);
+                        settingsTimeoutRef.current = null;
+                      }, 300);
+                    }}
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-700">
+                          Trộn thứ tự item
+                        </label>
+                        <button
+                          onClick={() => setRandomizeItems(!randomizeItems)}
+                          className={`relative w-12 h-6 rounded-full transition-colors ${
+                            randomizeItems ? "bg-purple-500" : "bg-gray-300"
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                              randomizeItems ? "left-7" : "left-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-700">
+                          Trộn thứ tự nhóm
+                        </label>
+                        <button
+                          onClick={() => setRandomizeGroups(!randomizeGroups)}
+                          className={`relative w-12 h-6 rounded-full transition-colors ${
+                            randomizeGroups ? "bg-purple-500" : "bg-gray-300"
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                              randomizeGroups ? "left-7" : "left-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        * Áp dụng khi nhấn Thử lại
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button
               onClick={handleRetry}
               className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-full shadow-md transition-colors"
@@ -317,8 +427,10 @@ const MatchingGameDemo: React.FC = () => {
 
           {/* KHU VỰC CÁC CỘT NHÓM */}
           <motion.div
+            ref={groupAreaRef}
             layout
             transition={layoutTransition}
+            onWheel={handleGroupAreaWheel}
             className="flex-1 flex gap-6 overflow-x-auto pb-4 custom-scrollbar-h"
           >
             <AnimatePresence>

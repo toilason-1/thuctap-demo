@@ -7,6 +7,15 @@ import { ImageOrEmoji } from "./ImageOrEmoji";
 const GroupColumn: React.FC<GroupColumnProps> = ({ group, items }) => {
   const { setNodeRef, isOver } = useDroppable({ id: group.id });
 
+  // Stop wheel event propagation if this column can scroll vertically
+  const handleWheel = (e: React.WheelEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    const canScroll = target.scrollHeight > target.clientHeight;
+    if (canScroll) {
+      e.stopPropagation();
+    }
+  };
+
   return (
     <motion.div
       layout
@@ -30,7 +39,10 @@ const GroupColumn: React.FC<GroupColumnProps> = ({ group, items }) => {
         </span>
       </div>
 
-      <div className="flex-1 w-full p-4 flex flex-col items-center gap-4 group-items-scrollbar">
+      <div
+        onWheel={handleWheel}
+        className="flex-1 w-full p-4 flex flex-col items-center gap-4 group-items-scrollbar"
+      >
         <AnimatePresence mode="popLayout">
           {items.map((item) => (
             <motion.div
