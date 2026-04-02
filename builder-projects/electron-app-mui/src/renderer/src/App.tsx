@@ -48,9 +48,10 @@ export default function App(): React.ReactElement {
 function SplashKiller() {
   // Remove splash screen after first React paint
   useEffect(() => {
-    const splash = document.getElementById('splash')
-    if (!splash) return
-    splash.classList.add('hiding')
+    const splash = document.getElementById('splash') as any
+    if (splash?.hide) {
+      splash.hide()
+    }
     const t = setTimeout(() => splash.remove(), 400)
     return () => clearTimeout(t)
   }, [])
