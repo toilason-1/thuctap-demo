@@ -5,31 +5,7 @@ import {
   ProjectSettings,
   ResolvedSettings
 } from '../types'
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function mergeSettings(global: GlobalSettings, project?: ProjectSettings | null): ResolvedSettings {
-  if (!project) return global
-  return {
-    autoSave: {
-      mode: project.autoSave?.mode ?? global.autoSave.mode,
-      intervalSeconds: project.autoSave?.intervalSeconds ?? global.autoSave.intervalSeconds
-    },
-    prefillNames: project.prefillNames != null ? project.prefillNames : global.prefillNames
-  }
-}
-
-function deepMergeDefaults(saved: object): GlobalSettings {
-  const s = saved as Partial<GlobalSettings>
-  return {
-    autoSave: {
-      mode: s.autoSave?.mode ?? DEFAULT_GLOBAL_SETTINGS.autoSave.mode,
-      intervalSeconds:
-        s.autoSave?.intervalSeconds ?? DEFAULT_GLOBAL_SETTINGS.autoSave.intervalSeconds
-    },
-    prefillNames: s.prefillNames ?? DEFAULT_GLOBAL_SETTINGS.prefillNames
-  }
-}
+import { deepMergeDefaults, mergeSettings } from '../utils/settingsUtils'
 
 // ── Context types ─────────────────────────────────────────────────────────────
 
@@ -59,7 +35,7 @@ export const SettingsContext = createContext<SettingsContextValue | null>(null)
 
 export function SettingsProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   const [globalSettings, setGlobalSettings] = useState<GlobalSettings>(DEFAULT_GLOBAL_SETTINGS)
-  const [projectSettings, setProjectSettings] = useState<ProjectSettings | null>(null)
+  const [projectSettings, setProjectSettingsState] = useState<ProjectSettings | null>(null)
   const [ready, setReady] = useState(false)
 
   // Load global settings from disk on mount
@@ -73,23 +49,48 @@ export function SettingsProvider({ children }: { children: React.ReactNode }): R
   const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const updateGlobal = useCallback((patch: Partial<GlobalSettings>) => {
-    setGlobalSettings((prev) => {
+    // Debounce persist - read current settings from disk and merge
+    if (persistTimer.current) clearTimeout(persistTimer.current)
+    persistTimer.current = setTimeout(async () => {
+      // Read latest settings from disk to get current recentProjects
+      const current = await window.electronAPI.settingsReadGlobal()
       const next: GlobalSettings = {
-        ...prev,
-        ...patch,
-        autoSave: { ...prev.autoSave, ...(patch.autoSave ?? {}) }
+        // Preserve recentProjects and any other fields from disk
+        ...(current as GlobalSettings),
+        // Override with updated core settings
+        autoSave: {
+          mode:
+            patch.autoSave?.mode ?? current.autoSave?.mode ?? DEFAULT_GLOBAL_SETTINGS.autoSave.mode,
+          intervalSeconds:
+            patch.autoSave?.intervalSeconds ??
+            current.autoSave?.intervalSeconds ??
+            DEFAULT_GLOBAL_SETTINGS.autoSave.intervalSeconds
+        },
+        prefillNames:
+          patch.prefillNames ?? current.prefillNames ?? DEFAULT_GLOBAL_SETTINGS.prefillNames
       }
-      // Debounce persist
-      if (persistTimer.current) clearTimeout(persistTimer.current)
-      persistTimer.current = setTimeout(() => {
-        window.electronAPI.settingsWriteGlobal(next)
-      }, 500)
-      return next
-    })
+      window.electronAPI.settingsWriteGlobal(next)
+    }, 500)
+
+    // Update local state immediately for UI responsiveness
+    setGlobalSettings((prev) => ({
+      ...prev,
+      autoSave: {
+        mode: patch.autoSave?.mode ?? prev.autoSave.mode,
+        intervalSeconds: patch.autoSave?.intervalSeconds ?? prev.autoSave.intervalSeconds
+      },
+      prefillNames: patch.prefillNames ?? prev.prefillNames
+    }))
   }, [])
 
   const updateProject = useCallback((patch: ProjectSettings | null) => {
-    setProjectSettings(patch)
+    setProjectSettingsState(patch)
+    // Note: Project settings are persisted when the project file is saved
+    // They are stored in ProjectFile.settings and saved via doSave/handleSave
+  }, [])
+
+  const setProjectSettings = useCallback((s: ProjectSettings | null) => {
+    setProjectSettingsState(s)
   }, [])
 
   const resolved = mergeSettings(globalSettings, projectSettings)

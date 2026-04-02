@@ -23,6 +23,7 @@ function readSettings(): Record<string, unknown> {
   }
   return {}
 }
+
 function writeSettings(data: object): void {
   fs.writeFileSync(settingsPath, JSON.stringify(data, null, 2), 'utf-8')
 }
