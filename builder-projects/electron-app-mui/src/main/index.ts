@@ -131,7 +131,7 @@ function purgeUnusedAssets(projectDir: string, projectData: object, history?: ob
 /** Copy only used assets to a destination directory */
 function copyUsedAssetsOnly(projectDir: string, destDir: string, projectData: object): void {
   const srcAssetsDir = path.join(projectDir, 'assets')
-  const destAssetsDir = path.join(destDir, 'assets')
+  const destAssetsDir = path.join(destDir, 'assets', 'user')
 
   if (!fs.existsSync(srcAssetsDir)) return
 
