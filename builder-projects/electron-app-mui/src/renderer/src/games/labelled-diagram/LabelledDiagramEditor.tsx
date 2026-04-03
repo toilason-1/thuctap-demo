@@ -13,10 +13,12 @@ import {
   Paper,
   TextField,
   Tooltip,
-  Typography
+  Typography,
+  keyframes,
+  styled
 } from '@mui/material'
 import { useEntityCreateShortcut } from '@renderer/hooks/useEntityCreateShortcut'
-import { JSX, MouseEvent, useCallback, useRef, useState } from 'react'
+import { JSX, MouseEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { ReactZoomPanPinchRef, TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import ImagePicker from '../../components/ImagePicker'
 import { useAssetUrl } from '../../hooks/useAssetUrl'
@@ -41,20 +43,54 @@ const BADGE_COLORS = [
   '#607d8b' // Blue Grey
 ]
 
+const pulse = keyframes`
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+`
+
+const SelectedBadgeOutline = styled(Box)(({}) => ({
+  position: 'absolute',
+  width: 40,
+  height: 40,
+  borderRadius: '50%',
+  border: '2px solid white',
+  animation: `${pulse} 2s infinite`,
+  pointerEvents: 'none',
+  zIndex: 9
+}))
+
 export default function LabelledDiagramEditor({
   appData,
   projectDir,
   onChange
 }: Props): JSX.Element {
+  const { points, imagePath } = appData
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [transform, setTransform] = useState({ scale: 1, positionX: 0, positionY: 0 })
+  const [selectedPointId, setSelectedPointId] = useState<string | null>(null)
+  const [draggingPointId, setDraggingPointId] = useState<string | null>(null)
+  const [localPoints, setLocalPoints] = useState<LabelledDiagramPoint[]>(points)
+  
+  // Sync localPoints with appData.points when NOT dragging
+  useEffect(() => {
+    if (!draggingPointId) {
+      setLocalPoints(points)
+    }
+  }, [points, draggingPointId])
+
   const transformRef = useRef<ReactZoomPanPinchRef>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
-
-  const [lastMouseDown, setLastMouseDown] = useState<{ x: number; y: number } | null>(null)
-
-  const { points, imagePath } = appData
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -73,31 +109,38 @@ export default function LabelledDiagramEditor({
       }
       onChange({
         ...appData,
-        points: [...points, newPoint],
+        points: [...localPoints, newPoint],
         _pointCounter: appData._pointCounter + 1
       })
+      setSelectedPointId(id)
     },
-    [appData, points, onChange]
+    [appData, localPoints, onChange]
   )
 
   const updatePoint = useCallback(
-    (id: string, patch: Partial<LabelledDiagramPoint>) => {
-      onChange({
-        ...appData,
-        points: points.map((p) => (p.id === id ? { ...p, ...patch } : p))
-      })
+    (id: string, patch: Partial<LabelledDiagramPoint>, commit = true) => {
+      const nextPoints = localPoints.map((p) => (p.id === id ? { ...p, ...patch } : p))
+      setLocalPoints(nextPoints)
+      
+      if (commit) {
+        onChange({
+          ...appData,
+          points: nextPoints
+        })
+      }
     },
-    [appData, points, onChange]
+    [appData, localPoints, onChange]
   )
 
   const deletePoint = useCallback(
     (id: string) => {
       onChange({
         ...appData,
-        points: points.filter((p) => p.id !== id)
+        points: localPoints.filter((p) => p.id !== id)
       })
+      if (selectedPointId === id) setSelectedPointId(null)
     },
-    [appData, points, onChange]
+    [appData, localPoints, selectedPointId, onChange]
   )
 
   const moveToPoint = useCallback((point: LabelledDiagramPoint) => {
@@ -110,8 +153,6 @@ export default function LabelledDiagramEditor({
     const targetX = (point.xPercent / 100) * imgWidth
     const targetY = (point.yPercent / 100) * imgHeight
 
-    // We want to center the point.
-    // Wrapper size:
     const wrapperWidth = wrapperRef.current?.offsetWidth ?? 0
     const wrapperHeight = wrapperRef.current?.offsetHeight ?? 0
 
@@ -119,6 +160,7 @@ export default function LabelledDiagramEditor({
     const posY = wrapperHeight / 2 - targetY * scale
 
     transformRef.current.setTransform(posX, posY, scale)
+    setSelectedPointId(point.id)
   }, [])
 
   // ── Keyboard shortcuts ─────────────────────────────────────────────────────
@@ -126,35 +168,119 @@ export default function LabelledDiagramEditor({
     onTier1: () => addPoint(50, 50)
   })
 
-  // ── Image Interaction ──────────────────────────────────────────────────────
+  // ── Drag & Drop Logic ──────────────────────────────────────────────────────
 
-  const handleImageClick = (e: MouseEvent) => {
+  const handleMouseMove = useCallback(
+    (e: globalThis.MouseEvent) => {
+      if (!draggingPointId || !imgRef.current || !wrapperRef.current) return
+
+      const rect = wrapperRef.current.getBoundingClientRect()
+      const clickX = e.clientX - rect.left
+      const clickY = e.clientY - rect.top
+
+      const { scale, positionX, positionY } = transform
+
+      const imgLocalX = (clickX - positionX) / scale
+      const imgLocalY = (clickY - positionY) / scale
+
+      const imgWidth = imgRef.current.offsetWidth
+      const imgHeight = imgRef.current.offsetHeight
+
+      if (imgWidth === 0 || imgHeight === 0) return
+
+      let xPercent = (imgLocalX / imgWidth) * 100
+      let yPercent = (imgLocalY / imgHeight) * 100
+
+      // Clamp
+      xPercent = Math.max(0, Math.min(100, xPercent))
+      yPercent = Math.max(0, Math.min(100, yPercent))
+
+      updatePoint(draggingPointId, { xPercent, yPercent }, false) // Don't commit yet
+    },
+    [draggingPointId, transform, updatePoint]
+  )
+
+  const handleMouseUp = useCallback(() => {
+    if (draggingPointId) {
+      // Commit final position to history
+      onChange({
+        ...appData,
+        points: localPoints
+      })
+    }
+    setDraggingPointId(null)
+  }, [draggingPointId, appData, localPoints, onChange])
+
+  useEffect(() => {
+    if (draggingPointId) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [draggingPointId, handleMouseMove, handleMouseUp])
+
+  // ── Mouse Interaction ──────────────────────────────────────────────────────
+
+  const handleInteraction = (e: MouseEvent, type: 'click' | 'doubleClick' | 'mouseDown') => {
     if (!imgRef.current || !wrapperRef.current) return
 
-    // Get click position relative to the wrapper
     const rect = wrapperRef.current.getBoundingClientRect()
     const clickX = e.clientX - rect.left
     const clickY = e.clientY - rect.top
 
     const { scale, positionX, positionY } = transform
 
-    // Convert to image coordinates
-    // We substract a small adjustment (12px) if we want the click to be the center of the badge,
-    // but the badges are already translated by -50%, -50% in CSS, so clickX/Y is the center.
-    const imgLocalX = (clickX - positionX) / scale
-    const imgLocalY = (clickY - positionY) / scale
-
     const imgWidth = imgRef.current.offsetWidth
     const imgHeight = imgRef.current.offsetHeight
 
-    if (imgWidth === 0 || imgHeight === 0) return
+    if (type === 'mouseDown') {
+      // Check if clicked ON a point
+      const threshold = 15 // pixels
+      let foundPointId: string | null = null
 
-    const xPercent = (imgLocalX / imgWidth) * 100
-    const yPercent = (imgLocalY / imgHeight) * 100
+      localPoints.forEach((p) => {
+        const badgeX = (p.xPercent / 100) * imgWidth * scale + positionX
+        const badgeY = (p.yPercent / 100) * imgHeight * scale + positionY
+        const dist = Math.sqrt((clickX - badgeX) ** 2 + (clickY - badgeY) ** 2)
+        if (dist < threshold + 10) {
+          // Slightly larger hit area for ease of use
+          foundPointId = p.id
+        }
+      })
 
-    // Clamp to 0-100
-    if (xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100) {
-      addPoint(xPercent, yPercent)
+      if (foundPointId) {
+        if (foundPointId === selectedPointId) {
+          // Already selected, start dragging
+          setDraggingPointId(foundPointId)
+          e.preventDefault() // Stop native browser drag
+          e.stopPropagation() // Prevent library from panning
+        } else {
+          // Select it, but don't prevent library yet (allow pan)
+          setSelectedPointId(foundPointId)
+        }
+      } else {
+        // Clicked on empty space
+        setSelectedPointId(null)
+      }
+      return
+    }
+
+    if (type === 'doubleClick') {
+      const imgLocalX = (clickX - positionX) / scale
+      const imgLocalY = (clickY - positionY) / scale
+      const xPercent = (imgLocalX / imgWidth) * 100
+      const yPercent = (imgLocalY / imgHeight) * 100
+
+      if (xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100) {
+        addPoint(xPercent, yPercent)
+      }
+      return
     }
   }
 
@@ -167,36 +293,39 @@ export default function LabelledDiagramEditor({
     const imgWidth = imgRef.current.offsetWidth
     const imgHeight = imgRef.current.offsetHeight
 
-    return points.map((p, index) => {
+    return localPoints.map((p, index) => {
+      const isSelected = selectedPointId === p.id
       const left = (p.xPercent / 100) * imgWidth * scale + positionX
       const top = (p.yPercent / 100) * imgHeight * scale + positionY
 
       return (
-        <Box
-          key={p.id}
-          sx={{
-            position: 'absolute',
-            left,
-            top,
-            transform: 'translate(-50%, -50%)',
-            width: 24,
-            height: 24,
-            borderRadius: '50%',
-            backgroundColor: getBadgeColor(index),
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '0.75rem',
-            fontWeight: 'bold',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-            border: '2px solid white',
-            pointerEvents: 'none', // Allow clicks to pass through to image for moving
-            zIndex: 10
-            // transition: 'left 0.1s ease-out, top 0.1s ease-out' // Removed transition to ensure it follows perfectly
-          }}
-        >
-          {index + 1}
+        <Box key={p.id}>
+          {isSelected && <SelectedBadgeOutline sx={{ left, top }} />}
+          <Box
+            sx={{
+              position: 'absolute',
+              left,
+              top,
+              transform: 'translate(-50%, -50%)',
+              width: 32, // Bigger
+              height: 32, // Bigger
+              borderRadius: '50%',
+              backgroundColor: getBadgeColor(index),
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.9rem', // Bigger font
+              fontWeight: 'bold', // Bold
+              boxShadow: isSelected ? '0 0 15px white' : '0 2px 4px rgba(0,0,0,0.3)',
+              border: '2px solid white',
+              pointerEvents: 'none', // Keep it none so events pass through to wrapper
+              zIndex: isSelected ? 11 : 10,
+              cursor: isSelected ? 'grab' : 'pointer'
+            }}
+          >
+            {index + 1}
+          </Box>
         </Box>
       )
     })
@@ -245,12 +374,11 @@ export default function LabelledDiagramEditor({
               gap: 2
             }}
           >
-            {points.map((p, index) => (
+            {localPoints.map((p, index) => (
               <Paper
                 key={p.id}
                 elevation={0}
                 onClick={(e) => {
-                  // Only move if not clicking inside an input or delete button
                   if (
                     (e.target as HTMLElement).tagName !== 'INPUT' &&
                     !(e.target as HTMLElement).closest('button')
@@ -260,8 +388,12 @@ export default function LabelledDiagramEditor({
                 }}
                 sx={{
                   p: 1.5,
-                  backgroundColor: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  backgroundColor:
+                    selectedPointId === p.id ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+                  border:
+                    selectedPointId === p.id
+                      ? '1px solid rgba(255,255,255,0.2)'
+                      : '1px solid rgba(255,255,255,0.08)',
                   borderRadius: 2,
                   cursor: 'pointer',
                   '&:hover': {
@@ -319,10 +451,10 @@ export default function LabelledDiagramEditor({
               </Paper>
             ))}
 
-            {points.length === 0 && (
+            {localPoints.length === 0 && (
               <Box sx={{ textAlign: 'center', py: 4, opacity: 0.5 }}>
                 <Typography variant="body2">No points added yet.</Typography>
-                <Typography variant="caption">Click on the image to add a point.</Typography>
+                <Typography variant="caption">Double click to add a point.</Typography>
               </Box>
             )}
 
@@ -366,24 +498,23 @@ export default function LabelledDiagramEditor({
           <>
             <Box
               ref={wrapperRef}
-              sx={{ width: '100%', height: '100%', position: 'relative' }}
-              onMouseDown={(e) => setLastMouseDown({ x: e.clientX, y: e.clientY })}
-              onClick={(e) => {
-                if (!lastMouseDown) return
-                const dx = Math.abs(e.clientX - lastMouseDown.x)
-                const dy = Math.abs(e.clientY - lastMouseDown.y)
-                // If the mouse moved less than 5 pixels, consider it a click (not a pan)
-                if (dx < 5 && dy < 5) {
-                  handleImageClick(e)
-                }
+              sx={{
+                width: '100%',
+                height: '100%',
+                position: 'relative',
+                cursor: draggingPointId ? 'grabbing' : 'default'
               }}
+              onMouseDown={(e) => handleInteraction(e, 'mouseDown')}
+              onDoubleClick={(e) => handleInteraction(e, 'doubleClick')}
+              onDragStart={(e) => e.preventDefault()} // Block native image dragging
             >
               <TransformWrapper
                 ref={transformRef}
                 initialScale={1}
-                minScale={0.1}
+                minScale={0.95}
                 maxScale={10}
                 centerOnInit
+                disabled={!!draggingPointId} // IMPORTANT: Disable pan when dragging a point
                 onTransformed={(ref) => setTransform({ ...ref.state })}
                 onPanning={(ref) => setTransform({ ...ref.state })}
                 onZoom={(ref) => setTransform({ ...ref.state })}
@@ -407,14 +538,10 @@ export default function LabelledDiagramEditor({
                         border: '1px solid rgba(255,255,255,0.1)'
                       }}
                       onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
                     >
                       <Tooltip title="Zoom In" placement="left">
-                        <IconButton
-                          size="small"
-                          onClick={() => {
-                            zoomIn()
-                          }}
-                        >
+                        <IconButton size="small" onClick={() => zoomIn()}>
                           <ZoomInIcon />
                         </IconButton>
                       </Tooltip>
@@ -440,13 +567,13 @@ export default function LabelledDiagramEditor({
                         ref={imgRef}
                         src={imageUrl}
                         alt="Diagram"
+                        draggable={false} // Disable native drag
                         style={{
                           pointerEvents: 'auto',
                           userSelect: 'none',
-                          maxWidth: 'none' // Allow it to be its natural size
+                          maxWidth: 'none'
                         }}
                         onLoad={() => {
-                          // Initial sync of transform data
                           if (transformRef.current) {
                             setTransform(transformRef.current.state)
                           }
@@ -500,7 +627,7 @@ export default function LabelledDiagramEditor({
                 sx={{ borderColor: 'rgba(255,255,255,0.1)' }}
               />
               <Typography variant="caption" color="text.secondary">
-                Double click or Use Ctrl+N to add points. Drag to move. Scroll to zoom.
+                Double click to add points. Click to select. Drag selected point to move.
               </Typography>
               <IconButton
                 size="small"
