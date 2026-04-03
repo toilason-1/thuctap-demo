@@ -52,6 +52,8 @@ export default function LabelledDiagramEditor({
   const imgRef = useRef<HTMLImageElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
+  const [lastMouseDown, setLastMouseDown] = useState<{ x: number; y: number } | null>(null)
+
   const { points, imagePath } = appData
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -137,6 +139,8 @@ export default function LabelledDiagramEditor({
     const { scale, positionX, positionY } = transform
 
     // Convert to image coordinates
+    // We substract a small adjustment (12px) if we want the click to be the center of the badge,
+    // but the badges are already translated by -50%, -50% in CSS, so clickX/Y is the center.
     const imgLocalX = (clickX - positionX) / scale
     const imgLocalY = (clickY - positionY) / scale
 
@@ -188,8 +192,8 @@ export default function LabelledDiagramEditor({
             boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
             border: '2px solid white',
             pointerEvents: 'none', // Allow clicks to pass through to image for moving
-            zIndex: 10,
-            transition: 'left 0.1s ease-out, top 0.1s ease-out' // Smooth follow
+            zIndex: 10
+            // transition: 'left 0.1s ease-out, top 0.1s ease-out' // Removed transition to ensure it follows perfectly
           }}
         >
           {index + 1}
@@ -363,7 +367,16 @@ export default function LabelledDiagramEditor({
             <Box
               ref={wrapperRef}
               sx={{ width: '100%', height: '100%', position: 'relative' }}
-              onDoubleClick={handleImageClick}
+              onMouseDown={(e) => setLastMouseDown({ x: e.clientX, y: e.clientY })}
+              onClick={(e) => {
+                if (!lastMouseDown) return
+                const dx = Math.abs(e.clientX - lastMouseDown.x)
+                const dy = Math.abs(e.clientY - lastMouseDown.y)
+                // If the mouse moved less than 5 pixels, consider it a click (not a pan)
+                if (dx < 5 && dy < 5) {
+                  handleImageClick(e)
+                }
+              }}
             >
               <TransformWrapper
                 ref={transformRef}
@@ -371,7 +384,9 @@ export default function LabelledDiagramEditor({
                 minScale={0.1}
                 maxScale={10}
                 centerOnInit
-                onTransformed={(ref) => setTransform(ref.state)}
+                onTransformed={(ref) => setTransform({ ...ref.state })}
+                onPanning={(ref) => setTransform({ ...ref.state })}
+                onZoom={(ref) => setTransform({ ...ref.state })}
               >
                 {({ zoomIn, zoomOut, resetTransform }) => (
                   <>
@@ -391,9 +406,15 @@ export default function LabelledDiagramEditor({
                         borderRadius: 2,
                         border: '1px solid rgba(255,255,255,0.1)'
                       }}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Tooltip title="Zoom In" placement="left">
-                        <IconButton size="small" onClick={() => zoomIn()}>
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            zoomIn()
+                          }}
+                        >
                           <ZoomInIcon />
                         </IconButton>
                       </Tooltip>
