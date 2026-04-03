@@ -123,14 +123,14 @@ export default function LabelledDiagramEditor({
     [data, selectedPointId, onChange]
   )
 
-  const handleImageClick = useCallback(
+  const handleImageDoubleClick = useCallback(
     (xPercent: number, yPercent: number) => {
       addPoint(xPercent, yPercent)
     },
     [addPoint]
   )
 
-  const handlePointDrag = useCallback(
+  const handlePointDragEnd = useCallback(
     (id: string, xPercent: number, yPercent: number) => {
       updatePoint(id, { xPercent, yPercent })
     },
@@ -317,8 +317,8 @@ export default function LabelledDiagramEditor({
               projectDir={projectDir}
               points={data.points}
               selectedPointId={selectedPointId}
-              onImageClick={handleImageClick}
-              onPointDrag={handlePointDrag}
+              onImageDoubleClick={handleImageDoubleClick}
+              onPointDrag={handlePointDragEnd}
               getPointColor={getPointColor}
               onAddPointAtCenter={addPoint}
               onShowWarning={setSnackbarMessage}
