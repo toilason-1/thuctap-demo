@@ -1,4 +1,5 @@
 import { Box, Button, Typography } from '@mui/material'
+import { useProjectHistory } from '@renderer/context/useProjectHistory'
 import { useSettings } from '@renderer/hooks/useSettings'
 import { JSX, useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -11,7 +12,7 @@ import {
 } from '../components/project/ProjectDialogs'
 import { ProjectToolbar } from '../components/project/ProjectToolbar'
 import SettingsPanel from '../components/SettingsPanel'
-import { ProjectHistoryProvider, useProjectHistory } from '../context/ProjectHistoryContext'
+import { ProjectHistoryProvider } from '../context/ProjectHistoryProvider'
 import { useSnackbar } from '../hooks'
 import { useProjectShortcuts } from '../hooks/useProjectShortcuts'
 import { useTemplateManager } from '../hooks/useTemplates'
@@ -119,9 +120,11 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
   const isDirtyRef = useRef(isDirty)
 
   // Keep refs in sync - update synchronously to avoid stale closures
-  metaRef.current = meta
-  appDataRef.current = appData
-  isDirtyRef.current = isDirty
+  useEffect(() => {
+    metaRef.current = meta
+    appDataRef.current = appData
+    isDirtyRef.current = isDirty
+  }, [meta, appData, isDirty])
 
   // ── Save ─────────────────────────────────────────────────────────────────
   const doSave = useCallback(

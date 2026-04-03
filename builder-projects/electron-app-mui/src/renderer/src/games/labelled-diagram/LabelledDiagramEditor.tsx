@@ -70,7 +70,7 @@ const hoverBadgePulse = keyframes`
   }
 `
 
-const SelectedBadgeOutline = styled(Box)(({}) => ({
+const SelectedBadgeOutline = styled(Box)(() => ({
   position: 'absolute',
   width: 44,
   height: 44,
@@ -119,7 +119,7 @@ export default function LabelledDiagramEditor({
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  const getBadgeColor = (index: number) => {
+  const getBadgeColor = (index: number): string => {
     return BADGE_COLORS[index % BADGE_COLORS.length]
   }
 
@@ -215,7 +215,7 @@ export default function LabelledDiagramEditor({
   })
 
   useEffect(() => {
-    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
+    const handleKeyDown = (e: globalThis.KeyboardEvent): void => {
       if (!selectedPointId) return
 
       // Don't delete if we're typing in a TextField
@@ -314,7 +314,7 @@ export default function LabelledDiagramEditor({
 
   // ── Mouse Interaction ──────────────────────────────────────────────────────
 
-  const handleInteraction = (e: MouseEvent, type: 'click' | 'doubleClick' | 'mouseDown') => {
+  const handleInteraction = (e: MouseEvent, type: 'click' | 'doubleClick' | 'mouseDown'): void => {
     if (!imgRef.current || !wrapperRef.current || !imgSize) return
 
     const rect = wrapperRef.current.getBoundingClientRect()
@@ -376,7 +376,7 @@ export default function LabelledDiagramEditor({
 
   // ── Rendering Badges ───────────────────────────────────────────────────────
 
-  const renderBadges = () => {
+  const renderBadges = (): JSX.Element[] | null => {
     if (!imgSize || !transform) return null
 
     const { scale, positionX, positionY } = transform

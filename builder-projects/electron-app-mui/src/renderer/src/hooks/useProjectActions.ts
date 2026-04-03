@@ -15,11 +15,30 @@ export interface SaveAsResult {
   projectDir: string
 }
 
+export interface ProjectActionsReturn {
+  handleSave: () => Promise<void>
+  handleSaveAs: () => Promise<
+    | { status: 'has-project' | 'non-empty'; folder: string }
+    | { status: 'success'; folder: string }
+    | null
+  >
+  performSaveAs: (folder: string) => Promise<SaveAsResult | null>
+  handleExport: (mode: 'folder' | 'zip') => Promise<void>
+  handlePreview: () => Promise<void>
+  handleRename: (newName: string) => Promise<boolean>
+  buildProjectFile: typeof buildProjectFile
+}
+
 /**
  * Hook for project file operations (save, saveAs, export, preview, rename).
  * Extracted from ProjectPage to reduce component complexity.
  */
-export function useProjectActions({ meta, appData, getHistory, onSnack }: ProjectActionsOptions) {
+export function useProjectActions({
+  meta,
+  appData,
+  getHistory,
+  onSnack
+}: ProjectActionsOptions): ProjectActionsReturn {
   // ── Save ─────────────────────────────────────────────────────────────────────
   const doSave = useCallback(
     async (currentMeta: ProjectMeta): Promise<void> => {
@@ -85,7 +104,7 @@ export function useProjectActions({ meta, appData, getHistory, onSnack }: Projec
       return { status: 'success', folder: result.folder }
     }
     return null
-  }, [meta, buildProjectFile, onSnack, performSaveAs])
+  }, [meta, appData, onSnack, performSaveAs])
 
   // ── Export ───────────────────────────────────────────────────────────────────
   const handleExport = useCallback(

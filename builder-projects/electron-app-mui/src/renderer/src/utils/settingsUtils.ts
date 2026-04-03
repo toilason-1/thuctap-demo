@@ -42,15 +42,21 @@ export function mergeSettings(
  * @returns Complete GlobalSettings with defaults applied
  */
 export function deepMergeDefaults(saved: object): GlobalSettings {
-  const s = saved as Partial<GlobalSettings>
+  const s = saved as Record<string, unknown>
+  const recentProjects = Array.isArray(s.recentProjects)
+    ? (s.recentProjects as GlobalSettings['recentProjects'])
+    : []
   return {
     // Preserve recentProjects and any other unknown fields
-    recentProjects: Array.isArray((s as any).recentProjects) ? (s as any).recentProjects : [],
+    recentProjects,
     autoSave: {
-      mode: s.autoSave?.mode ?? DEFAULT_GLOBAL_SETTINGS.autoSave.mode,
+      mode:
+        (s.autoSave as GlobalSettings['autoSave'])?.mode ?? DEFAULT_GLOBAL_SETTINGS.autoSave.mode,
       intervalSeconds:
-        s.autoSave?.intervalSeconds ?? DEFAULT_GLOBAL_SETTINGS.autoSave.intervalSeconds
+        (s.autoSave as GlobalSettings['autoSave'])?.intervalSeconds ??
+        DEFAULT_GLOBAL_SETTINGS.autoSave.intervalSeconds
     },
-    prefillNames: s.prefillNames ?? DEFAULT_GLOBAL_SETTINGS.prefillNames
+    prefillNames:
+      (s.prefillNames as GlobalSettings['prefillNames']) ?? DEFAULT_GLOBAL_SETTINGS.prefillNames
   }
 }

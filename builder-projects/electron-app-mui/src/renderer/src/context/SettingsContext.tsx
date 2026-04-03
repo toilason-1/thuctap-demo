@@ -1,35 +1,10 @@
-import React, { createContext, useCallback, useEffect, useRef, useState } from 'react'
-import {
-  DEFAULT_GLOBAL_SETTINGS,
-  GlobalSettings,
-  ProjectSettings,
-  ResolvedSettings
-} from '../types'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { DEFAULT_GLOBAL_SETTINGS, GlobalSettings, ProjectSettings } from '../types'
 import { deepMergeDefaults, mergeSettings } from '../utils/settingsUtils'
+import { SettingsContext } from './SettingsContextTypes'
 
-// ── Context types ─────────────────────────────────────────────────────────────
-
-export interface SettingsContextValue {
-  /** Raw global settings (for displaying / editing) */
-  globalSettings: GlobalSettings
-  /** Current per-project overrides */
-  projectSettings: ProjectSettings | null
-  /** Merged effective settings */
-  resolved: ResolvedSettings
-  /** Whether global settings have been loaded from disk */
-  ready: boolean
-
-  updateGlobal: (patch: Partial<GlobalSettings>) => void
-  updateProject: (patch: ProjectSettings | null) => void
-
-  /**
-   * Call this from ProjectPage to plug in per-project settings.
-   * Pass null when leaving the project page.
-   */
-  setProjectSettings: (s: ProjectSettings | null) => void
-}
-
-export const SettingsContext = createContext<SettingsContextValue | null>(null)
+export { SettingsContext } from './SettingsContextTypes'
+export type { SettingsContextValue } from './SettingsContextTypes'
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 

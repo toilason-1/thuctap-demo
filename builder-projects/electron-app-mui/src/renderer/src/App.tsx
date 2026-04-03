@@ -45,14 +45,20 @@ export default function App(): React.ReactElement {
 }
 
 // This component only "exists" once Suspense is finished
-function SplashKiller() {
+function SplashKiller(): null {
   // Remove splash screen after first React paint
   useEffect(() => {
-    const splash = document.getElementById('splash') as any
-    if (splash?.hide) {
-      splash.hide()
+    const splash = document.getElementById('splash')
+
+    // Cast to a generic object structure to check for the property
+    const splashObj = splash as unknown as Record<string, unknown>
+
+    if (splashObj && typeof splashObj.hide === 'function') {
+      // We still need to cast to Function to call it
+      ;(splashObj.hide as () => void)()
     }
-    const t = setTimeout(() => splash.remove(), 400)
+
+    const t = setTimeout(() => splash?.remove(), 400)
     return () => clearTimeout(t)
   }, [])
 
