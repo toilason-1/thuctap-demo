@@ -2055,6 +2055,7 @@ __metadata:
     globals: "npm:^17.4.0"
     react: "npm:^19.2.4"
     react-dom: "npm:^19.2.4"
+    react-sounds: "npm:^1.0.30"
     tailwindcss: "npm:^4.2.2"
     typescript: "npm:~6.0.2"
     typescript-eslint: "npm:^8.58.0"
