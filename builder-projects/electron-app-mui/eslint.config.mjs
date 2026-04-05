@@ -32,6 +32,7 @@ export default defineConfig(
       ...eslintPluginReactCompiler.configs.recommended.rules,
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
       '@typescript-eslint/no-unused-vars': [
+        'warn',
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',

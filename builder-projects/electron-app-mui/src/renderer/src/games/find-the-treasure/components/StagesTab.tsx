@@ -50,7 +50,7 @@ export function StagesTab({
 
   // Determine which stage to show
   const selectedStage = selectedStageId
-    ? stages.find((s) => s.id === selectedStageId) ?? null
+    ? (stages.find((s) => s.id === selectedStageId) ?? null)
     : null
   const selectedStageIndex = selectedStage ? stages.indexOf(selectedStage) : -1
 

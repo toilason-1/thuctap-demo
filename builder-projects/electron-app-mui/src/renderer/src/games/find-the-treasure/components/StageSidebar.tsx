@@ -2,9 +2,10 @@ import CollectionsIcon from '@mui/icons-material/Collections'
 import DeleteIcon from '@mui/icons-material/Delete'
 import SettingsIcon from '@mui/icons-material/Settings'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
-import { Box, Chip, Divider, IconButton, Tooltip, Typography, keyframes } from '@mui/material'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { Box, Chip, Divider, IconButton, Tooltip, Typography } from '@mui/material'
+import React, { useCallback, useState } from 'react'
 import { FindTheTreasureStage } from '../../../types'
+import { MarqueeText } from './MarqueeText'
 
 export type Tab = 'stages' | 'settings'
 
@@ -15,86 +16,6 @@ export interface StageSidebarProps {
   activeStageId: string | null
   onStageSelect: (stageId: string) => void
   onStageDelete: (stageId: string) => void
-}
-
-const marquee = keyframes`
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-`
-
-/**
- * Marquee text — only animates when isActive is true.
- * Non-active entries use simple ellipsis overflow.
- */
-function MarqueeText({
-  text,
-  isActive
-}: {
-  text: string
-  isActive: boolean
-}): React.ReactElement {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [needsMarquee, setNeedsMarquee] = useState(false)
-
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    // Measure: if scrollWidth > clientWidth, text overflows
-    setNeedsMarquee(el.scrollWidth > el.clientWidth)
-    // Re-check on resize
-    const ro = new ResizeObserver(() => {
-      setNeedsMarquee(el.scrollWidth > el.clientWidth)
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [text])
-
-  // Non-active or doesn't overflow → simple ellipsis
-  if (!needsMarquee || !isActive) {
-    return (
-      <Typography
-        ref={containerRef}
-        variant="caption"
-        sx={{
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis',
-          fontSize: '0.75rem'
-        }}
-      >
-        {text}
-      </Typography>
-    )
-  }
-
-  // Marquee: duplicate content for seamless loop
-  const duration = Math.max(4, text.length * 0.15)
-  return (
-    <Box ref={containerRef} sx={{ overflow: 'hidden', whiteSpace: 'nowrap' }}>
-      <Box
-        sx={{
-          display: 'inline-block',
-          animation: `${marquee} ${duration}s linear infinite`,
-          whiteSpace: 'nowrap'
-        }}
-      >
-        <Typography
-          component="span"
-          variant="caption"
-          sx={{ fontSize: '0.75rem', pr: 3 }}
-        >
-          {text}
-        </Typography>
-        <Typography
-          component="span"
-          variant="caption"
-          sx={{ fontSize: '0.75rem', pr: 3 }}
-        >
-          {text}
-        </Typography>
-      </Box>
-    </Box>
-  )
 }
 
 export function StageSidebar({
@@ -112,6 +33,9 @@ export function StageSidebar({
     },
     [onStageDelete]
   )
+
+  // ── NEW: Track hovered stage ID ──
+  const [hoveredStageId, setHoveredStageId] = useState<string | null>(null)
 
   // Validation counts
   const stagesWithIssues = stages.filter((s) => {
@@ -176,7 +100,10 @@ export function StageSidebar({
             }
           }}
         >
-          <CollectionsIcon fontSize="small" sx={{ color: tab === 'stages' ? '#6384ff' : 'text.secondary', fontSize: 18 }} />
+          <CollectionsIcon
+            fontSize="small"
+            sx={{ color: tab === 'stages' ? '#6384ff' : 'text.secondary', fontSize: 18 }}
+          />
           <Typography
             variant="caption"
             sx={{
@@ -195,43 +122,39 @@ export function StageSidebar({
               height: 16,
               fontSize: '0.6rem',
               minWidth: 20,
-              background: stagesWithIssues.length > 0 ? 'rgba(255,82,82,0.2)' : 'rgba(99,132,255,0.15)',
+              background:
+                stagesWithIssues.length > 0 ? 'rgba(255,82,82,0.2)' : 'rgba(99,132,255,0.15)',
               color: stagesWithIssues.length > 0 ? '#ff5252' : '#6384ff'
             }}
           />
         </Box>
-        <Box
-          role="button"
-          onClick={() => onTabChange('settings')}
-          sx={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: 1.5,
-            py: 1,
-            borderRadius: 1.5,
-            cursor: 'pointer',
-            background: tab === 'settings' ? 'rgba(99,132,255,0.15)' : 'transparent',
-            border: tab === 'settings' ? '1px solid rgba(99,132,255,0.3)' : '1px solid transparent',
-            transition: 'all 0.15s ease',
-            '&:hover': {
-              background: tab === 'settings' ? 'rgba(99,132,255,0.2)' : 'rgba(255,255,255,0.04)'
-            }
-          }}
-        >
-          <SettingsIcon fontSize="small" sx={{ color: tab === 'settings' ? '#6384ff' : 'text.secondary', fontSize: 18 }} />
-          <Typography
-            variant="caption"
+        <Tooltip title="Settings">
+          <Box
+            role="button"
+            onClick={() => onTabChange('settings')}
             sx={{
-              fontSize: '0.7rem',
-              fontWeight: tab === 'settings' ? 600 : 400,
-              color: tab === 'settings' ? '#6384ff' : 'text.secondary'
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              px: 1.5,
+              py: 1,
+              borderRadius: 1.5,
+              cursor: 'pointer',
+              background: tab === 'settings' ? 'rgba(99,132,255,0.15)' : 'transparent',
+              border:
+                tab === 'settings' ? '1px solid rgba(99,132,255,0.3)' : '1px solid transparent',
+              transition: 'all 0.15s ease',
+              '&:hover': {
+                background: tab === 'settings' ? 'rgba(99,132,255,0.2)' : 'rgba(255,255,255,0.04)'
+              }
             }}
           >
-            Settings
-          </Typography>
-        </Box>
+            <SettingsIcon
+              sx={{ color: tab === 'settings' ? '#6384ff' : 'text.secondary', fontSize: 18 }}
+            />
+          </Box>
+        </Tooltip>
       </Box>
 
       <Divider sx={{ my: 1, borderColor: 'rgba(255,255,255,0.06)' }} />
@@ -270,11 +193,16 @@ export function StageSidebar({
               s.answers.some((a) => !a.text.trim()) ||
               s.answers.length < 2
             const isActive = s.id === activeStageId
+            // ── NEW: Check if this stage is hovered ──
+            const isHovered = hoveredStageId === s.id
 
             return (
               <Box
                 key={s.id}
                 onClick={() => onStageSelect(s.id)}
+                // ── NEW: Add hover handlers ──
+                onMouseEnter={() => setHoveredStageId(s.id)}
+                onMouseLeave={() => setHoveredStageId(null)}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -312,12 +240,13 @@ export function StageSidebar({
                   sx={{
                     flex: 1,
                     overflow: 'hidden',
-                    minWidth: 0
+                    minWidth: 0 // CRITICAL: allows the box to be smaller than the text
                   }}
                 >
                   <MarqueeText
                     text={s.stageName || `Stage ${idx + 1}`}
                     isActive={isActive}
+                    isHovered={isHovered} // ← Pass hovered state
                   />
                 </Box>
 
