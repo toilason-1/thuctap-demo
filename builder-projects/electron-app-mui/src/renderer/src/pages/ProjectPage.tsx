@@ -84,15 +84,19 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
     return () => setProjectSettings(null)
   }, [locationState?.data?.settings, setProjectSettings])
 
+  const [prevProjectSettings, setPrevProjectSettings] = useState(projectSettings)
+
   // Sync project settings from context to meta (for saving)
   // Only update meta when projectSettings change, not vice versa
-  useEffect(() => {
+  if (prevProjectSettings !== projectSettings) {
+    setPrevProjectSettings(projectSettings)
     setMeta((prev) => {
       if (!prev) return prev
       if (prev.settings === projectSettings) return prev
       return { ...prev, settings: projectSettings }
     })
-  }, [projectSettings])
+    setIsDirty(true)
+  }
 
   // Update window title whenever meta or appData changes
   useEffect(() => {
@@ -289,6 +293,7 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
     if (!meta || !renameValue.trim()) return
     const updated = { ...meta, name: renameValue.trim() }
     setMeta(updated)
+    setIsDirty(true)
     setRenameOpen(false)
     try {
       await doSave(updated, appData)
