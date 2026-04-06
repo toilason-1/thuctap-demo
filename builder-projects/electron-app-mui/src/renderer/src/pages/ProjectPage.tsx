@@ -93,9 +93,9 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
     setMeta((prev) => {
       if (!prev) return prev
       if (prev.settings === projectSettings) return prev
+      setIsDirty(true)
       return { ...prev, settings: projectSettings }
     })
-    setIsDirty(true)
   }
 
   // Update window title whenever meta or appData changes
