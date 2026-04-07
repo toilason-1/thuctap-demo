@@ -4,7 +4,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import TransformIcon from '@mui/icons-material/Transform'
 import { Box, Button, IconButton, TextField, Tooltip, Typography } from '@mui/material'
-import { getExcelName } from '@renderer/utils'
+import { toBb26 } from '@renderer/utils'
 import React from 'react'
 import { FindTheTreasureAnswer, FindTheTreasureStage } from '../../../types'
 
@@ -183,7 +183,7 @@ export function StageCard({
                   error={!answer.text.trim()}
                   helperText={!answer.text.trim() ? 'Required' : ''}
                   onChange={(e) => onUpdateAnswer(stage.id, answer.id, { text: e.target.value })}
-                  placeholder={`Option ${getExcelName(aIdx)}…`}
+                  placeholder={`Option ${toBb26(aIdx)}…`}
                   // sx={{
                   //   '& .MuiOutlinedInput-root': {
                   //     borderColor: isCorrect ? 'success.main' : undefined,

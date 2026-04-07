@@ -3,7 +3,7 @@ import { useEntityCreateShortcut } from '@renderer/hooks/useEntityCreateShortcut
 import { useSettings } from '@renderer/hooks/useSettings'
 import { JSX, useCallback } from 'react'
 import { BalloonLetterPickerAppData, BalloonWord } from '../../types'
-import { getExcelName } from '../../utils/stringUtils'
+import { toBb26 } from '../../utils/stringUtils'
 import { SummarySidebar, WordsTab } from './components'
 
 interface Props {
@@ -31,7 +31,7 @@ export default function BalloonLetterPickerEditor({
       const c = data._wordCounter + 1
       const w: BalloonWord = {
         id: `word-${c}`,
-        word: resolved.prefillNames ? `WORD${getExcelName(c)}` : '',
+        word: resolved.prefillNames ? `WORD${toBb26(c)}` : '',
         imagePath: initialImagePath ?? null,
         hint: resolved.prefillNames ? `Hint ${c}` : ''
       }
@@ -48,7 +48,7 @@ export default function BalloonLetterPickerEditor({
       const imagePath = `${relativePath.replace(/\\/g, '/')}`
       const w: BalloonWord = {
         id,
-        word: resolved.prefillNames ? `WORD${getExcelName(c)}` : '',
+        word: resolved.prefillNames ? `WORD${toBb26(c)}` : '',
         imagePath,
         hint: ''
       }

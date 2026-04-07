@@ -28,9 +28,6 @@ export type { TieredShortcutOptions } from './useTieredShortcuts'
 
 export { useTieredShortcuts } from './useTieredShortcuts'
 
-export { useAutoSave } from './useAutoSave'
-export type { UseAutoSaveOptions } from './useAutoSave'
-
 // UI state (new)
 export { useSnackbar } from './useSnackbar'
 export type { UseSnackbarReturn } from './useSnackbar'

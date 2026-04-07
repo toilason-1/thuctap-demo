@@ -1,7 +1,7 @@
 import { Box } from '@mui/material'
 import { useEntityCreateShortcut } from '@renderer/hooks/useEntityCreateShortcut'
 import { useSettings } from '@renderer/hooks/useSettings'
-import { getExcelName } from '@renderer/utils'
+import { toBb26 } from '@renderer/utils'
 import React, { useCallback } from 'react'
 import { QuizAnswer, QuizAppData, QuizQuestion } from '../../types'
 import { QuizTab, SummarySidebar } from './components'
@@ -94,7 +94,7 @@ export default function QuizEditor({
           const ac = q._answerCounter + 1
           const newAnswer: QuizAnswer = {
             id: `${qid}-a-${ac}`,
-            text: resolved.prefillNames ? `Answer ${getExcelName(ac)}` : '',
+            text: resolved.prefillNames ? `Answer ${toBb26(ac)}` : '',
             isCorrect: false
           }
           return { ...q, _answerCounter: ac, answers: [...q.answers, newAnswer] }

@@ -6,7 +6,7 @@ import { useSettings } from '@renderer/hooks/useSettings'
 import { useCallback, useState } from 'react'
 import { SidebarTab } from '../../components/editors'
 import { WordSearchAppData, WordSearchItem } from '../../types'
-import { getExcelName } from '../../utils/stringUtils'
+import { toBb26 } from '../../utils/stringUtils'
 import { SettingsTab, WordsTab } from './components'
 
 interface Props {
@@ -41,7 +41,7 @@ export default function WordSearchEditor({
       const { id, counter } = nextItemId()
       const i: WordSearchItem = {
         id,
-        word: resolved.prefillNames ? `WORD${getExcelName(counter)}` : '',
+        word: resolved.prefillNames ? `WORD${toBb26(counter)}` : '',
         imagePath: initialImage ?? null
       }
       onChange({ ...data, _itemCounter: counter, items: [...items, i] })
@@ -55,7 +55,7 @@ export default function WordSearchEditor({
       const imagePath = await window.electronAPI.importImage(filePath, projectDir, id)
       const i: WordSearchItem = {
         id,
-        word: resolved.prefillNames ? `WORD${getExcelName(counter)}` : '',
+        word: resolved.prefillNames ? `WORD${toBb26(counter)}` : '',
         imagePath
       }
       onChange({ ...data, _itemCounter: counter, items: [...items, i] })
