@@ -12,6 +12,9 @@ import { useSettingsStore } from '../stores/settingsStore'
 import { useTemplateManager } from '../hooks/useTemplates'
 import { GameTemplate, RecentProject } from '../types'
 
+// Constant empty array to prevent infinite re-renders in Zustand selector
+const EMPTY_RECENT_PROJECTS: RecentProject[] = []
+
 type FolderDialogState =
   | { type: 'non-empty'; folder: string; template: GameTemplate }
   | { type: 'has-project'; folder: string; template: GameTemplate }
@@ -25,8 +28,9 @@ export default function HomePage(): JSX.Element {
   const [showRecent, setShowRecent] = useState(false)
 
   // Use Zustand store for recent projects
+  // Note: Using ?? with constant to avoid creating new arrays on each call (prevents infinite loops)
   const recentProjects = useSettingsStore(
-    (s) => (s.globalSettings.recentProjects || []) as RecentProject[]
+    (s) => (s.globalSettings.recentProjects ?? EMPTY_RECENT_PROJECTS) as RecentProject[]
   )
   const addRecentProject = useSettingsStore((s) => s.addRecentProject)
   const removeRecentProject = useSettingsStore((s) => s.removeRecentProject)

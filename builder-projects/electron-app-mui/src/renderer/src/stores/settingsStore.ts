@@ -16,6 +16,9 @@ import {
 } from '../types'
 import { deepMergeDefaults, mergeSettings } from '../utils/settingsUtils'
 
+// Constant empty array to prevent issues with undefined recentProjects
+const EMPTY_RECENT_LIST: RecentProject[] = []
+
 // ── Store Interface ───────────────────────────────────────────────────────────
 
 interface SettingsState {
@@ -102,7 +105,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   // ── Recent Projects Actions ─────────────────────────────────────────
   addRecentProject: async (entry) => {
     const state = get()
-    const existing = (state.globalSettings.recentProjects || []) as RecentProject[]
+    const existing = (state.globalSettings.recentProjects ?? EMPTY_RECENT_LIST) as RecentProject[]
     const filtered = existing.filter((r) => r.filePath !== entry.filePath)
     const updated = [entry, ...filtered].slice(0, 30)
 
@@ -124,7 +127,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
 
   removeRecentProject: async (filePath) => {
     const state = get()
-    const existing = (state.globalSettings.recentProjects || []) as RecentProject[]
+    const existing = (state.globalSettings.recentProjects ?? EMPTY_RECENT_LIST) as RecentProject[]
     const updated = existing.filter((r) => r.filePath !== filePath)
 
     set({
