@@ -1,4 +1,4 @@
-import { useTieredShortcuts, type TieredShortcutOptions } from './useTieredShortcuts'
+import { useTieredShortcuts, type TieredShortcutOptions } from '@renderer/hooks/useTieredShortcuts'
 
 /**
  * Keyboard shortcuts for creating entities at different tiers.

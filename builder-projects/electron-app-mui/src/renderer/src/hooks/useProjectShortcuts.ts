@@ -1,5 +1,5 @@
+import { useTieredShortcuts } from '@renderer/hooks/useTieredShortcuts'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { useTieredShortcuts } from './useTieredShortcuts'
 
 export interface ProjectShortcutOptions {
   // Navigation

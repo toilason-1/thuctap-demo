@@ -1,9 +1,9 @@
 import AddIcon from '@mui/icons-material/Add'
 import TextFieldsIcon from '@mui/icons-material/TextFields'
 import { Alert, Box, Button, Chip, Collapse, Divider, Typography } from '@mui/material'
+import { EmptyState, FileDropTarget, SidebarTab, StickyHeader } from '@renderer/components'
+import { BalloonWord } from '@shared/types'
 import React from 'react'
-import { EmptyState, FileDropTarget, SidebarTab, StickyHeader } from '../../../components'
-import { BalloonWord } from '../../../types'
 import { WordCard } from './WordCard'
 
 export interface WordsTabProps {

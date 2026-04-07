@@ -5,8 +5,8 @@
  * centralized IPC_CHANNEL_DEFINITIONS in the shared module.
  */
 
+import type { IPCChannelDefinitions, IPCHandler } from '@shared'
 import { ipcMain } from 'electron'
-import type { IPCChannelDefinitions, IPCHandler } from '../shared'
 
 /**
  * Register a typed IPC handler.

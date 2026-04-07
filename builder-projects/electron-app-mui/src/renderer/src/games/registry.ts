@@ -9,8 +9,8 @@
  *     src/main/gameRegistry.ts
  */
 
+import type { AnyAppData } from '@shared/types'
 import type { ComponentType } from 'react'
-import type { AnyAppData } from '../types'
 
 import BalloonLetterPickerEditor from './balloon-letter-picker/BalloonLetterPickerEditor'
 import FindTheTreasureEditor from './find-the-treasure/FindTheTreasureEditor'

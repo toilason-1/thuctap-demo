@@ -9,9 +9,9 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
+import { FileDropTarget, ImagePicker, IndexBadge, NameField } from '@renderer/components'
+import { GroupSortGroup, GroupSortItem } from '@shared/types'
 import React from 'react'
-import { FileDropTarget, ImagePicker, IndexBadge, NameField } from '../../../components'
-import { GroupSortGroup, GroupSortItem } from '../../../types'
 
 export interface ItemCardProps {
   item: GroupSortItem

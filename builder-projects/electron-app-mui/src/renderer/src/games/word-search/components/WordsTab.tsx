@@ -1,9 +1,9 @@
 import AddIcon from '@mui/icons-material/Add'
 import CollectionsIcon from '@mui/icons-material/Collections'
 import { Alert, Box, Button, Collapse } from '@mui/material'
+import { EmptyState, FileDropTarget, StickyHeader } from '@renderer/components'
+import { WordSearchItem } from '@shared/types'
 import React from 'react'
-import { EmptyState, FileDropTarget, StickyHeader } from '../../../components'
-import { WordSearchItem } from '../../../types'
 import { WordCard } from './WordCard'
 
 export interface WordsTabProps {

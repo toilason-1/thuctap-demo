@@ -1,6 +1,6 @@
 import { Box } from '@mui/material'
+import { BalloonLetterPickerAppData } from '@shared/types'
 import { JSX } from 'react'
-import { BalloonLetterPickerAppData } from '../../types'
 import { SummarySidebar, WordsTab } from './components'
 import { useBalloonCrud } from './hooks/useBalloonCrud'
 

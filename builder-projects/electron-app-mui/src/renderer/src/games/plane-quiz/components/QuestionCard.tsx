@@ -10,9 +10,9 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
+import { FileDropTarget, ImagePicker, IndexBadge, NameField } from '@renderer/components'
+import { QuizAnswer, QuizQuestion } from '@shared/types'
 import React from 'react'
-import { FileDropTarget, ImagePicker, IndexBadge, NameField } from '../../../components'
-import { QuizAnswer, QuizQuestion } from '../../../types'
 import { AnswerList } from './AnswerList'
 
 export interface QuestionCardProps {

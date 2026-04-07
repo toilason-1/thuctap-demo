@@ -1,11 +1,11 @@
+import AppShell from '@renderer/components/AppShell'
+import { SettingsProvider } from '@renderer/context/SettingsContext'
+import { usePrefetchTemplates } from '@renderer/hooks/useTemplates'
+import HomePage from '@renderer/pages/HomePage'
+import ProjectPage from '@renderer/pages/ProjectPage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React, { Suspense, useEffect } from 'react'
 import { HashRouter, Route, Routes } from 'react-router-dom'
-import AppShell from './components/AppShell'
-import { SettingsProvider } from './context/SettingsContext'
-import { usePrefetchTemplates } from './hooks/useTemplates'
-import HomePage from './pages/HomePage'
-import ProjectPage from './pages/ProjectPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {

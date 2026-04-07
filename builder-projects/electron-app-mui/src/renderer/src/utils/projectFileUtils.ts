@@ -4,7 +4,7 @@
  * Pure functions for project file operations and data transformation.
  */
 
-import { AnyAppData, ProjectFile, ProjectMeta } from '../types'
+import type { AnyAppData, ProjectFile, ProjectMeta } from '@shared/types'
 
 /**
  * Builds a complete project file from meta and app data.

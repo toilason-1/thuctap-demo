@@ -5,7 +5,6 @@ import ExtensionIcon from '@mui/icons-material/Extension'
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import { Alert, Box, Button, Chip, IconButton, Paper, Tooltip, Typography } from '@mui/material'
-import React from 'react'
 import {
   EmptyState,
   FileDropTarget,
@@ -13,8 +12,9 @@ import {
   IndexBadge,
   NameField,
   StickyHeader
-} from '../../../components'
-import { GroupSortGroup, GroupSortItem } from '../../../types'
+} from '@renderer/components'
+import { GroupSortGroup, GroupSortItem } from '@shared/types'
+import React from 'react'
 import { GroupCard } from './GroupCard'
 import { ItemCard } from './ItemCard'
 

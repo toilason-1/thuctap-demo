@@ -5,8 +5,8 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import TransformIcon from '@mui/icons-material/Transform'
 import { Box, Button, IconButton, TextField, Tooltip, Typography } from '@mui/material'
 import { toBb26 } from '@renderer/utils'
+import type { FindTheTreasureAnswer, FindTheTreasureStage } from '@shared/types'
 import React from 'react'
-import { FindTheTreasureAnswer, FindTheTreasureStage } from '../../../types'
 
 export interface StageCardProps {
   stage: FindTheTreasureStage

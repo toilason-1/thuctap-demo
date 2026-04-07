@@ -1,9 +1,9 @@
 import AddIcon from '@mui/icons-material/Add'
 import IslandsIcon from '@mui/icons-material/Terrain'
 import { Alert, Box, Button, Collapse } from '@mui/material'
+import { EmptyState, FileDropTarget, StickyHeader } from '@renderer/components/editors'
+import type { FindTheTreasureAnswer, FindTheTreasureStage } from '@shared/types'
 import React from 'react'
-import { EmptyState, FileDropTarget, StickyHeader } from '../../../components/editors'
-import { FindTheTreasureAnswer, FindTheTreasureStage } from '../../../types'
 import { StageCard } from './StageCard'
 
 export interface StagesTabProps {

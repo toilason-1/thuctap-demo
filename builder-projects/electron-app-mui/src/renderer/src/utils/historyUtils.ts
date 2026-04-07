@@ -4,7 +4,7 @@
  * Pure functions for undo/redo history operations.
  */
 
-import { AnyAppData } from '../types'
+import type { AnyAppData } from '@shared/types'
 
 /**
  * Extracts the full history array from the zustand-travel history.

@@ -1,5 +1,5 @@
+import type { AnyAppData } from '@shared/types'
 import { useState, type ReactNode } from 'react'
-import { AnyAppData } from '../types'
 import { ProjectHistoryContext } from './ProjectHistoryContext'
 import { createHistoryStore } from './ProjectHistoryStore'
 

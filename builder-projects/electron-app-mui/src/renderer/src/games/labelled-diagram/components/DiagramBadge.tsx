@@ -1,6 +1,6 @@
 import { Box } from '@mui/material'
+import { LabelledDiagramPoint } from '@shared/types'
 import React from 'react'
-import { LabelledDiagramPoint } from '../../../types'
 import { DIAGRAM_PADDING, getBadgeColor, hoverBadgePulse, SelectedBadgeOutline } from '../styles'
 
 interface DiagramBadgeProps {

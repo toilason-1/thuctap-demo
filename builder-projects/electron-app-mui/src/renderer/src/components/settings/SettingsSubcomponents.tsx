@@ -11,8 +11,8 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
+import type { AutoSaveMode, ProjectSettings } from '@shared/types'
 import React from 'react'
-import { AutoSaveMode, ProjectSettings } from '../../types'
 
 // ── Section Header ─────────────────────────────────────────────────────────────
 export interface SectionHeaderProps {

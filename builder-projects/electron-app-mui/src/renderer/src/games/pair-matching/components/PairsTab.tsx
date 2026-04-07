@@ -1,9 +1,9 @@
 import AddIcon from '@mui/icons-material/Add'
 import CollectionsIcon from '@mui/icons-material/Collections'
 import { Alert, Box, Button, Collapse } from '@mui/material'
+import { EmptyState, FileDropTarget, StickyHeader } from '@renderer/components'
+import { PairMatchingItem } from '@shared/types'
 import React from 'react'
-import { EmptyState, FileDropTarget, StickyHeader } from '../../../components'
-import { PairMatchingItem } from '../../../types'
 import { PairCard } from './PairCard'
 
 export interface PairsTabProps {

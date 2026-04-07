@@ -2,9 +2,9 @@ import AddIcon from '@mui/icons-material/Add'
 import QuizIcon from '@mui/icons-material/Quiz'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import { Alert, Box, Button, Chip, Collapse, Divider, Typography } from '@mui/material'
+import { EmptyState, FileDropTarget, SidebarTab, StickyHeader } from '@renderer/components'
+import { QuizAnswer, QuizQuestion } from '@shared/types'
 import React from 'react'
-import { EmptyState, FileDropTarget, SidebarTab, StickyHeader } from '../../../components'
-import { QuizAnswer, QuizQuestion } from '../../../types'
 import { QuestionCard } from './QuestionCard'
 
 export interface QuizTabProps {

@@ -1,8 +1,8 @@
 import DeleteIcon from '@mui/icons-material/Delete'
 import { Box, IconButton, Paper, Typography } from '@mui/material'
+import { FileDropTarget, ImagePicker, IndexBadge, NameField } from '@renderer/components'
+import { WhackAMoleQuestion } from '@shared/types'
 import React from 'react'
-import { FileDropTarget, ImagePicker, IndexBadge, NameField } from '../../../components'
-import { WhackAMoleQuestion } from '../../../types'
 
 export interface QuestionCardProps {
   question: WhackAMoleQuestion

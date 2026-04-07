@@ -1,6 +1,6 @@
+import type { AnyAppData } from '@shared/types'
 import { createStore, type StoreApi } from 'zustand'
 import { travel } from 'zustand-travel'
-import { AnyAppData } from '../types'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 export const MAX_HISTORY_LENGTH = 50

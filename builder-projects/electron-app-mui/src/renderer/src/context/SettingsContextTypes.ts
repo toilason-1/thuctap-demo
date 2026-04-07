@@ -1,5 +1,5 @@
+import type { GlobalSettings, ProjectSettings, ResolvedSettings } from '@shared/types'
 import { createContext } from 'react'
-import { GlobalSettings, ProjectSettings, ResolvedSettings } from '../types'
 
 // ── Context types ─────────────────────────────────────────────────────────────
 

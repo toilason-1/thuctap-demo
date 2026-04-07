@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material'
+import ImagePicker from '@renderer/components/ImagePicker'
+import { LabelledDiagramAppData } from '@shared/types'
 import React from 'react'
-import ImagePicker from '../../../components/ImagePicker'
-import { LabelledDiagramAppData } from '../../../types'
 
 interface DiagramEmptyStateProps {
   appData: LabelledDiagramAppData

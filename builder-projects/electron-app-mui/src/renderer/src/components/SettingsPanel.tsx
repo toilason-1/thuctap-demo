@@ -1,13 +1,13 @@
 import CloseIcon from '@mui/icons-material/Close'
 import { Box, Divider, Drawer, IconButton, Typography } from '@mui/material'
-import { useSettings } from '@renderer/hooks/useSettings'
-import { useSettingsStore } from '@renderer/stores/settingsStore'
-import React, { useCallback } from 'react'
 import {
   GlobalSettingsSection,
   ProjectOverrideSection
-} from '../components/settings/SettingsSubcomponents'
-import { ProjectSettings } from '../types'
+} from '@renderer/components/settings/SettingsSubcomponents'
+import { useSettings } from '@renderer/hooks/useSettings'
+import { useSettingsStore } from '@renderer/stores/settingsStore'
+import type { ProjectSettings } from '@shared/types'
+import React, { useCallback } from 'react'
 
 interface Props {
   open: boolean

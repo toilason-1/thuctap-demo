@@ -1,18 +1,18 @@
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports'
 import { Box, Divider, Typography } from '@mui/material'
-import { useAppDocumentTitle } from '@renderer/hooks/useAppDocumentTitle'
-import { JSX, useCallback, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useBoolean } from 'usehooks-ts'
 import {
   HasProjectDialog,
   NonEmptyFolderDialog,
   RecentProjectsSection,
   TemplateGrid
-} from '../components/home/HomeComponents'
-import { useTemplateManager } from '../hooks/useTemplates'
-import { useSettingsStore } from '../stores/settingsStore'
-import { GameTemplate, RecentProject } from '../types'
+} from '@renderer/components/home/HomeComponents'
+import { useAppDocumentTitle } from '@renderer/hooks/useAppDocumentTitle'
+import { useTemplateManager } from '@renderer/hooks/useTemplates'
+import { useSettingsStore } from '@renderer/stores/settingsStore'
+import type { GameTemplate, RecentProject } from '@shared/types'
+import { JSX, useCallback, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useBoolean } from 'usehooks-ts'
 
 // Constant empty array to prevent infinite re-renders in Zustand selector
 const EMPTY_RECENT_PROJECTS: RecentProject[] = []

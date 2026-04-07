@@ -1,6 +1,6 @@
 import { Box } from '@mui/material'
+import { QuizAppData } from '@shared/types'
 import React from 'react'
-import { QuizAppData } from '../../types'
 import { QuizTab, SummarySidebar } from './components'
 import { usePlaneQuizCrud } from './hooks/usePlaneQuizCrud'
 

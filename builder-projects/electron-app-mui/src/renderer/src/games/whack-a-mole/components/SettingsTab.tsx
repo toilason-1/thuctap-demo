@@ -1,7 +1,7 @@
 import { Box, Paper, TextField, Typography } from '@mui/material'
+import { StickyHeader } from '@renderer/components'
+import { WhackAMoleAppData } from '@shared/types'
 import React from 'react'
-import { StickyHeader } from '../../../components'
-import { WhackAMoleAppData } from '../../../types'
 
 export interface SettingsTabProps {
   data: WhackAMoleAppData

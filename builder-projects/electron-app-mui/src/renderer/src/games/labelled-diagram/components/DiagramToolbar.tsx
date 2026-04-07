@@ -1,7 +1,7 @@
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { Box, Divider, IconButton, Typography } from '@mui/material'
+import { LabelledDiagramAppData } from '@shared/types'
 import React from 'react'
-import { LabelledDiagramAppData } from '../../../types'
 
 interface DiagramToolbarProps {
   appData: LabelledDiagramAppData

@@ -7,8 +7,8 @@
  * Uses the registry from ../games/registry for Editor components and initial data factories.
  */
 
-import { GAME_REGISTRY, type GameRegistryEntry } from '../games/registry'
-import type { AnyAppData, GameTemplate } from '../types'
+import { GAME_REGISTRY, type GameRegistryEntry } from '@renderer/games/registry'
+import type { AnyAppData, GameTemplate } from '@shared/types'
 
 /**
  * TemplateManager - Manages game templates with efficient lookups.

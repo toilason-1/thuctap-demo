@@ -1,4 +1,4 @@
-import { LabelledDiagramAppData, LabelledDiagramPoint } from '@renderer/types'
+import { LabelledDiagramAppData, LabelledDiagramPoint } from '@shared/types'
 import { MouseEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
 import { DIAGRAM_PADDING } from '../styles'

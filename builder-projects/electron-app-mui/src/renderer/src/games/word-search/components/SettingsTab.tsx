@@ -1,8 +1,8 @@
 import { Box, Paper, Typography } from '@mui/material'
+import { StickyHeader } from '@renderer/components'
+import ImagePicker from '@renderer/components/ImagePicker'
+import { WordSearchAppData } from '@shared/types'
 import React from 'react'
-import { StickyHeader } from '../../../components'
-import ImagePicker from '../../../components/ImagePicker'
-import { WordSearchAppData } from '../../../types'
 
 export interface SettingsTabProps {
   data: WordSearchAppData

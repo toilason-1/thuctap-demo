@@ -1,4 +1,7 @@
-import { useEntityCreateShortcut, type TieredShortcutOptions } from './useEntityCreateShortcut'
+import {
+  useEntityCreateShortcut,
+  type TieredShortcutOptions
+} from '@renderer/hooks/useEntityCreateShortcut'
 
 /**
  * @deprecated Use useEntityCreateShortcut instead.

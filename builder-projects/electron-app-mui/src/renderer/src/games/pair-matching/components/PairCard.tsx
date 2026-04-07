@@ -1,8 +1,8 @@
 import DeleteIcon from '@mui/icons-material/Delete'
 import { IconButton, Paper, TextField, Tooltip } from '@mui/material'
+import { FileDropTarget, ImagePicker, IndexBadge, NameField } from '@renderer/components'
+import { PairMatchingItem } from '@shared/types'
 import React from 'react'
-import { FileDropTarget, ImagePicker, IndexBadge, NameField } from '../../../components'
-import { PairMatchingItem } from '../../../types'
 
 export interface PairCardProps {
   item: PairMatchingItem

@@ -1,9 +1,9 @@
 import MoleIcon from '@mui/icons-material/Cookie'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import { Alert, Box, Button, Chip, Collapse, Divider, Typography } from '@mui/material'
+import { EmptyState, FileDropTarget, SidebarTab, StickyHeader } from '@renderer/components'
+import { WhackAMoleQuestion } from '@shared/types'
 import React from 'react'
-import { EmptyState, FileDropTarget, SidebarTab, StickyHeader } from '../../../components'
-import { WhackAMoleQuestion } from '../../../types'
 import { QuestionCard } from './QuestionCard'
 
 export interface QuestionsTabProps {

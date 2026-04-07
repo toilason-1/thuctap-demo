@@ -6,8 +6,8 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import { Box, Button, IconButton, TextField, Tooltip, Typography } from '@mui/material'
 import { toBb26 } from '@renderer/utils'
+import { QuizAnswer, QuizQuestion } from '@shared/types'
 import React from 'react'
-import { QuizAnswer, QuizQuestion } from '../../../types'
 
 export interface AnswerListProps {
   question: QuizQuestion

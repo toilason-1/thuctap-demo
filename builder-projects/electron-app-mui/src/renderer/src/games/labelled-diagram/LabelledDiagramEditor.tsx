@@ -1,9 +1,9 @@
 import { Box } from '@mui/material'
+import { useAssetUrl } from '@renderer/hooks/useAssetUrl'
 import { useEntityCreateShortcut } from '@renderer/hooks/useEntityCreateShortcut'
+import { LabelledDiagramAppData } from '@shared/types'
 import { JSX, useCallback, useEffect, useState } from 'react'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
-import { useAssetUrl } from '../../hooks/useAssetUrl'
-import { LabelledDiagramAppData } from '../../types'
 import {
   DiagramBadge,
   DiagramControls,

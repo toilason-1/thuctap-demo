@@ -3,9 +3,9 @@ import ClearIcon from '@mui/icons-material/Clear'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import { Box, CircularProgress, IconButton, SxProps, Tooltip, Typography } from '@mui/material'
+import { useAssetUrl } from '@renderer/hooks/useAssetUrl'
 import React, { useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { useAssetUrl } from '../hooks/useAssetUrl'
 
 interface Props {
   projectDir: string

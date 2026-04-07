@@ -1,9 +1,9 @@
 import CollectionsIcon from '@mui/icons-material/Collections'
 import SettingsIcon from '@mui/icons-material/Settings'
 import { Box, Typography } from '@mui/material'
+import { SidebarTab } from '@renderer/components/editors'
+import { WhackAMoleAppData } from '@shared/types'
 import React, { useState } from 'react'
-import { SidebarTab } from '../../components/editors'
-import { WhackAMoleAppData } from '../../types'
 import { QuestionsTab, SettingsTab } from './components'
 import { useWhackAMoleCrud } from './hooks/useWhackAMoleCrud'
 

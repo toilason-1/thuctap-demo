@@ -5,16 +5,16 @@
  * Persistence is handled manually via electronAPI calls (not using Zustand persist middleware).
  */
 
-import { create } from 'zustand'
-import {
+import { deepMergeDefaults, mergeSettings } from '@renderer/utils/settingsUtils'
+import type {
   AutoSaveMode,
-  DEFAULT_GLOBAL_SETTINGS,
   GlobalSettings,
   ProjectSettings,
   RecentProject,
   ResolvedSettings
-} from '../types'
-import { deepMergeDefaults, mergeSettings } from '../utils/settingsUtils'
+} from '@shared/types'
+import { DEFAULT_GLOBAL_SETTINGS } from '@shared/types'
+import { create } from 'zustand'
 
 // Constant empty array to prevent issues with undefined recentProjects
 const EMPTY_RECENT_LIST: RecentProject[] = []

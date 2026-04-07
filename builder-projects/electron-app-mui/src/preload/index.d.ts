@@ -5,7 +5,7 @@
  * that is exposed to the renderer process via contextBridge.
  */
 
-import type { FolderStatus, GameTemplate, GlobalSettings, ProjectFile } from '../shared'
+import type { FolderStatus, GameTemplate, GlobalSettings, ProjectFile } from '@shared'
 
 export interface ElectronAPI {
   // Templates

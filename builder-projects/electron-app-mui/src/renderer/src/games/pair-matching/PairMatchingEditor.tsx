@@ -1,9 +1,9 @@
 import CollectionsIcon from '@mui/icons-material/Collections'
 import SettingsIcon from '@mui/icons-material/Settings'
 import { Box, Typography } from '@mui/material'
+import { SidebarTab } from '@renderer/components/editors'
+import { PairMatchingAppData } from '@shared/types'
 import { JSX, useState } from 'react'
-import { SidebarTab } from '../../components/editors'
-import { PairMatchingAppData } from '../../types'
 import { PairsTab, SettingsTab } from './components'
 import { usePairCrud } from './hooks/usePairCrud'
 

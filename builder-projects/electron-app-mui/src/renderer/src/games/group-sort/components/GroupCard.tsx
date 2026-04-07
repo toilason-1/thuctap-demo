@@ -1,8 +1,8 @@
 import DeleteIcon from '@mui/icons-material/Delete'
 import { IconButton, Paper, Tooltip } from '@mui/material'
+import { FileDropTarget, ImagePicker, IndexBadge, NameField } from '@renderer/components'
+import { GroupSortGroup } from '@shared/types'
 import React from 'react'
-import { FileDropTarget, ImagePicker, IndexBadge, NameField } from '../../../components'
-import { GroupSortGroup } from '../../../types'
 
 export interface GroupCardProps {
   group: GroupSortGroup

@@ -23,9 +23,9 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
+import { timeRelative } from '@renderer/utils/stringUtils'
+import type { GameTemplate, RecentProject } from '@shared/types'
 import React from 'react'
-import { GameTemplate, RecentProject } from '../../types'
-import { timeRelative } from '../../utils/stringUtils'
 
 // ── Recent Projects Section ───────────────────────────────────────────────────
 export interface RecentProjectsSectionProps {

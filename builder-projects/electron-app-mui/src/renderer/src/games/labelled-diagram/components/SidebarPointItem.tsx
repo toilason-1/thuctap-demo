@@ -1,7 +1,7 @@
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { Box, IconButton, Paper, TextField, Typography } from '@mui/material'
+import { LabelledDiagramPoint } from '@shared/types'
 import React from 'react'
-import { LabelledDiagramPoint } from '../../../types'
 import { getBadgeColor } from '../styles'
 
 interface SidebarPointItemProps {

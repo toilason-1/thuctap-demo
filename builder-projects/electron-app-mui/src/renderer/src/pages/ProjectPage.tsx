@@ -1,28 +1,28 @@
 import { Box, Button, Typography } from '@mui/material'
-import { useProjectHistory } from '@renderer/context/useProjectHistory'
-import { useAppDocumentTitle } from '@renderer/hooks/useAppDocumentTitle'
-import { useSettings } from '@renderer/hooks/useSettings'
-import { useSettingsStore } from '@renderer/stores/settingsStore'
-import { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { useBoolean, useInterval, useUnmount } from 'usehooks-ts'
-import { MoreActionsMenu } from '../components/project/MoreActionsMenu'
+import { MoreActionsMenu } from '@renderer/components/project/MoreActionsMenu'
 import {
   BackConfirmDialog,
   ExportMenu,
   ProjectSnackbar,
   RenameDialog,
   SaveAsConfirmDialog
-} from '../components/project/ProjectDialogs'
-import { ProjectToolbar } from '../components/project/ProjectToolbar'
-import SettingsPanel from '../components/SettingsPanel'
-import { ProjectHistoryProvider } from '../context/ProjectHistoryProvider'
-import { useSnackbar } from '../hooks'
-import { useProjectShortcuts } from '../hooks/useProjectShortcuts'
-import { useTemplateManager } from '../hooks/useTemplates'
-import { AnyAppData, ProjectFile, ProjectMeta } from '../types'
-import { getHistoryArray } from '../utils/historyUtils'
-import { buildProjectFile, buildProjectTitle } from '../utils/projectFileUtils'
+} from '@renderer/components/project/ProjectDialogs'
+import { ProjectToolbar } from '@renderer/components/project/ProjectToolbar'
+import SettingsPanel from '@renderer/components/SettingsPanel'
+import { ProjectHistoryProvider } from '@renderer/context/ProjectHistoryProvider'
+import { useProjectHistory } from '@renderer/context/useProjectHistory'
+import { useSnackbar } from '@renderer/hooks'
+import { useAppDocumentTitle } from '@renderer/hooks/useAppDocumentTitle'
+import { useProjectShortcuts } from '@renderer/hooks/useProjectShortcuts'
+import { useSettings } from '@renderer/hooks/useSettings'
+import { useTemplateManager } from '@renderer/hooks/useTemplates'
+import { useSettingsStore } from '@renderer/stores/settingsStore'
+import { getHistoryArray } from '@renderer/utils/historyUtils'
+import { buildProjectFile, buildProjectTitle } from '@renderer/utils/projectFileUtils'
+import type { AnyAppData, ProjectFile, ProjectMeta } from '@shared/types'
+import { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useBoolean, useInterval, useUnmount } from 'usehooks-ts'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const AUTO_SAVE_DEBOUNCE_MS = 1000

@@ -1,8 +1,8 @@
 import DeleteIcon from '@mui/icons-material/Delete'
 import { Box, IconButton, Paper, TextField, Tooltip } from '@mui/material'
+import { AtoZWordField, FileDropTarget, ImagePicker, IndexBadge } from '@renderer/components'
+import { BalloonWord } from '@shared/types'
 import React from 'react'
-import { AtoZWordField, FileDropTarget, ImagePicker, IndexBadge } from '../../../components'
-import { BalloonWord } from '../../../types'
 
 export interface WordCardProps {
   word: BalloonWord

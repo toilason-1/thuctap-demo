@@ -1,9 +1,9 @@
 import CollectionsIcon from '@mui/icons-material/Collections'
 import SettingsIcon from '@mui/icons-material/Settings'
 import { Box, Typography } from '@mui/material'
+import { SidebarTab } from '@renderer/components/editors'
+import { WordSearchAppData } from '@shared/types'
 import { useState } from 'react'
-import { SidebarTab } from '../../components/editors'
-import { WordSearchAppData } from '../../types'
 import { SettingsTab, WordsTab } from './components'
 import { useWordSearchCrud } from './hooks/useWordSearchCrud'
 

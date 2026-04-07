@@ -1,6 +1,6 @@
+import { useSettingsStore } from '@renderer/stores/settingsStore'
+import { mergeSettings } from '@renderer/utils/settingsUtils'
 import React, { useEffect, useMemo } from 'react'
-import { useSettingsStore } from '../stores/settingsStore'
-import { mergeSettings } from '../utils/settingsUtils'
 import { SettingsContext } from './SettingsContextTypes'
 
 export { SettingsContext } from './SettingsContextTypes'

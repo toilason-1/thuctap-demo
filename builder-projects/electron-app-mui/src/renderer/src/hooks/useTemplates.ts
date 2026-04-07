@@ -9,9 +9,9 @@
  * - Cooked: TemplateManager created via select() for consumption
  */
 
+import { TemplateManager } from '@renderer/utils/TemplateManager'
+import type { GameTemplate } from '@shared/types'
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
-import type { GameTemplate } from '../types'
-import { TemplateManager } from '../utils/TemplateManager'
 
 /**
  * Query key for templates - single key since there's only one IPC call.
