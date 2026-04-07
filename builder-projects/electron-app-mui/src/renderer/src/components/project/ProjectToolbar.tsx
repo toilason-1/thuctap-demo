@@ -130,7 +130,6 @@ export function ProjectToolbar({
 
         <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
-        {renderMoreActions()}
         <Tooltip title="Save (Ctrl+S)">
           <Button
             size="small"
@@ -162,6 +161,7 @@ export function ProjectToolbar({
             Export
           </Button>
         </Tooltip>
+        {renderMoreActions()}
       </Box>
     </Box>
   )
