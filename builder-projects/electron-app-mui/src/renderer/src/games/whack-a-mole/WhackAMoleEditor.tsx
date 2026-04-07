@@ -1,12 +1,11 @@
 import CollectionsIcon from '@mui/icons-material/Collections'
 import SettingsIcon from '@mui/icons-material/Settings'
 import { Box, Typography } from '@mui/material'
-import { useEntityCreateShortcut } from '@renderer/hooks/useEntityCreateShortcut'
-import { useSettings } from '@renderer/hooks/useSettings'
-import React, { useCallback, useState } from 'react'
+import React, { useState } from 'react'
 import { SidebarTab } from '../../components/editors'
-import { WhackAMoleAppData, WhackAMoleQuestion } from '../../types'
+import { WhackAMoleAppData } from '../../types'
 import { QuestionsTab, SettingsTab } from './components'
+import { useWhackAMoleCrud } from './useWhackAMoleCrud'
 
 interface Props {
   appData: WhackAMoleAppData
@@ -33,61 +32,12 @@ export default function WhackAMoleEditor({
 }: Props): React.ReactElement {
   const data = normalize(raw)
   const [tab, setTab] = useState<Tab>('questions')
-  const { resolved } = useSettings()
   const { questions } = data
-
-  // ── CRUD ──────────────────────────────────────────────────────────────────
-  const addQuestion = useCallback(
-    (initialImage?: string) => {
-      const qc = data._questionCounter + 1
-      const qid = `q-${qc}`
-      const q: WhackAMoleQuestion = {
-        id: qid,
-        question: resolved.prefillNames ? `Question ${qc}` : '',
-        questionImage: initialImage ?? null,
-        answerText: resolved.prefillNames ? `Answer ${qc}` : '',
-        answerImage: null
-      }
-      onChange({ ...data, _questionCounter: qc, questions: [...questions, q] })
-    },
-    [data, questions, resolved.prefillNames, onChange]
+  const { addQuestion, addQuestionFromDrop, updateQuestion, deleteQuestion } = useWhackAMoleCrud(
+    data,
+    projectDir,
+    onChange
   )
-
-  const addQuestionFromDrop = useCallback(
-    async (filePath: string) => {
-      const qc = data._questionCounter + 1
-      const qid = `q-${qc}`
-      const questionImage = await window.electronAPI.importImage(filePath, projectDir, qid)
-      const q: WhackAMoleQuestion = {
-        id: qid,
-        question: resolved.prefillNames ? `Question ${qc}` : '',
-        questionImage,
-        answerText: resolved.prefillNames ? `Answer ${qc}` : '',
-        answerImage: null
-      }
-      onChange({ ...data, _questionCounter: qc, questions: [...questions, q] })
-    },
-    [data, questions, projectDir, resolved.prefillNames, onChange]
-  )
-
-  const updateQuestion = useCallback(
-    (id: string, patch: Partial<WhackAMoleQuestion>) => {
-      onChange({ ...data, questions: questions.map((q) => (q.id === id ? { ...q, ...patch } : q)) })
-    },
-    [data, questions, onChange]
-  )
-
-  const deleteQuestion = useCallback(
-    (id: string) => {
-      onChange({ ...data, questions: questions.filter((q) => q.id !== id) })
-    },
-    [data, questions, onChange]
-  )
-
-  // ── Keyboard shortcuts ────────────────────────────────────────────────────
-  useEntityCreateShortcut({
-    onTier1: addQuestion
-  })
 
   const unnamedQ = questions.filter((q) => !q.question.trim())
 

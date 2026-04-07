@@ -1,10 +1,8 @@
 import { Box } from '@mui/material'
-import { useEntityCreateShortcut } from '@renderer/hooks/useEntityCreateShortcut'
-import { useSettings } from '@renderer/hooks/useSettings'
-import { JSX, useCallback } from 'react'
-import { BalloonLetterPickerAppData, BalloonWord } from '../../types'
-import { toBb26 } from '../../utils/stringUtils'
+import { JSX } from 'react'
+import { BalloonLetterPickerAppData } from '../../types'
 import { SummarySidebar, WordsTab } from './components'
+import { useBalloonCrud } from './useBalloonCrud'
 
 interface Props {
   appData: BalloonLetterPickerAppData
@@ -16,65 +14,23 @@ function normalize(d: BalloonLetterPickerAppData): BalloonLetterPickerAppData {
   return { ...d, _wordCounter: d._wordCounter ?? 0, words: d.words ?? [] }
 }
 
+/**
+ * Balloon Letter Picker Editor
+ * Teachers create words where students pop balloons to spell words from hints.
+ */
 export default function BalloonLetterPickerEditor({
   appData: raw,
   projectDir,
   onChange
 }: Props): JSX.Element {
   const data = normalize(raw)
-  const { resolved } = useSettings()
-  const { words } = data
 
-  // ── CRUD ──────────────────────────────────────────────────────────────────
-  const addWord = useCallback(
-    (initialImagePath?: string) => {
-      const c = data._wordCounter + 1
-      const w: BalloonWord = {
-        id: `word-${c}`,
-        word: resolved.prefillNames ? `WORD${toBb26(c)}` : '',
-        imagePath: initialImagePath ?? null,
-        hint: resolved.prefillNames ? `Hint ${c}` : ''
-      }
-      onChange({ ...data, _wordCounter: c, words: [...words, w] })
-    },
-    [data, words, resolved.prefillNames, onChange]
+  // Extract CRUD logic to hook
+  const { words, addWord, addWordFromDrop, updateWord, deleteWord } = useBalloonCrud(
+    data,
+    projectDir,
+    onChange
   )
-
-  const addWordFromDrop = useCallback(
-    async (filePath: string) => {
-      const c = data._wordCounter + 1
-      const id = `word-${c}`
-      const relativePath = await window.electronAPI.importImage(filePath, projectDir, id)
-      const imagePath = `${relativePath.replace(/\\/g, '/')}`
-      const w: BalloonWord = {
-        id,
-        word: resolved.prefillNames ? `WORD${toBb26(c)}` : '',
-        imagePath,
-        hint: ''
-      }
-      onChange({ ...data, _wordCounter: c, words: [...words, w] })
-    },
-    [data, words, projectDir, resolved.prefillNames, onChange]
-  )
-
-  const updateWord = useCallback(
-    (id: string, patch: Partial<BalloonWord>) => {
-      onChange({ ...data, words: words.map((w) => (w.id === id ? { ...w, ...patch } : w)) })
-    },
-    [data, words, onChange]
-  )
-
-  const deleteWord = useCallback(
-    (id: string) => {
-      onChange({ ...data, words: words.filter((w) => w.id !== id) })
-    },
-    [data, words, onChange]
-  )
-
-  // ── Keyboard shortcuts ────────────────────────────────────────────────────
-  useEntityCreateShortcut({
-    onTier1: addWord
-  })
 
   return (
     <Box sx={{ display: 'flex', height: '100%', overflow: 'hidden' }}>

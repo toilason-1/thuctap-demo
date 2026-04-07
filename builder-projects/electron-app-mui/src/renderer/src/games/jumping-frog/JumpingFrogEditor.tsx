@@ -1,9 +1,8 @@
 import { Box } from '@mui/material'
-import { useEntityCreateShortcut } from '@renderer/hooks/useEntityCreateShortcut'
-import { useSettings } from '@renderer/hooks/useSettings'
-import React, { useCallback } from 'react'
-import { JumpingFrogAnswer, JumpingFrogAppData, JumpingFrogQuestion } from '../../types'
+import React from 'react'
+import { JumpingFrogAppData } from '../../types'
 import { QuestionsTab, SummarySidebar } from './components'
+import { useJumpingFrogCrud } from './useJumpingFrogCrud'
 
 interface Props {
   appData: JumpingFrogAppData
@@ -20,137 +19,26 @@ function normalize(d: JumpingFrogAppData): JumpingFrogAppData {
   }
 }
 
+/**
+ * Jumping Frog Editor
+ * Teachers create questions where students select the correct answer by jumping on frogs.
+ */
 export default function JumpingFrogEditor({
   appData: raw,
   projectDir: _projectDir,
   onChange
 }: Props): React.ReactElement {
   const data = normalize(raw)
-  const { resolved } = useSettings()
-  const { questions } = data
 
-  // ── CRUD ──────────────────────────────────────────────────────────────────
-  const addQuestion = useCallback(
-    (_initialImage?: string) => {
-      const qc = data._questionCounter + 1
-      const qid = `q-${qc}`
-      const ac = data._answerCounter
-
-      const answers: JumpingFrogAnswer[] = [
-        {
-          id: `${qid}-a-${ac + 1}`,
-          text: resolved.prefillNames ? `Option ${ac + 1}` : '',
-          imagePath: null,
-          isCorrect: true
-        },
-        {
-          id: `${qid}-a-${ac + 2}`,
-          text: resolved.prefillNames ? `Option ${ac + 2}` : '',
-          imagePath: null,
-          isCorrect: false
-        },
-        {
-          id: `${qid}-a-${ac + 3}`,
-          text: resolved.prefillNames ? `Option ${ac + 3}` : '',
-          imagePath: null,
-          isCorrect: false
-        }
-      ]
-
-      const q: JumpingFrogQuestion = {
-        id: qid,
-        question: resolved.prefillNames ? `Question ${qc}` : '',
-        answers
-      }
-
-      onChange({
-        ...data,
-        _questionCounter: qc,
-        _answerCounter: ac + 3,
-        questions: [...questions, q]
-      })
-    },
-    [data, questions, resolved.prefillNames, onChange]
-  )
-
-  const addQuestionFromDrop = useCallback(
-    async (filePath: string) => {
-      const qc = data._questionCounter + 1
-      const qid = `q-${qc}`
-      const ac = data._answerCounter
-      const imagePath = await window.electronAPI.importImage(filePath, _projectDir, qid)
-
-      const answers: JumpingFrogAnswer[] = [
-        {
-          id: `${qid}-a-${ac + 1}`,
-          text: resolved.prefillNames ? `Option ${ac + 1}` : '',
-          imagePath,
-          isCorrect: true
-        },
-        {
-          id: `${qid}-a-${ac + 2}`,
-          text: resolved.prefillNames ? `Option ${ac + 2}` : '',
-          imagePath: null,
-          isCorrect: false
-        }
-      ]
-
-      const q: JumpingFrogQuestion = {
-        id: qid,
-        question: resolved.prefillNames ? `Question ${qc}` : '',
-        answers
-      }
-
-      onChange({
-        ...data,
-        _questionCounter: qc,
-        _answerCounter: ac + 2,
-        questions: [...questions, q]
-      })
-    },
-    [data, questions, _projectDir, resolved.prefillNames, onChange]
-  )
-
-  const updateQuestion = useCallback(
-    (id: string, patch: Partial<JumpingFrogQuestion>) => {
-      onChange({ ...data, questions: questions.map((q) => (q.id === id ? { ...q, ...patch } : q)) })
-    },
-    [data, questions, onChange]
-  )
-
-  const deleteQuestion = useCallback(
-    (id: string) => {
-      onChange({ ...data, questions: questions.filter((q) => q.id !== id) })
-    },
-    [data, questions, onChange]
-  )
-
-  const updateAnswer = useCallback(
-    (qid: string, aid: string, patch: Partial<JumpingFrogAnswer>) => {
-      onChange({
-        ...data,
-        questions: questions.map((q) => {
-          if (q.id !== qid) return q
-          let answers = q.answers.map((a) => (a.id === aid ? { ...a, ...patch } : a))
-
-          // Marking as correct → uncheck others (single-correct mode)
-          if (patch.isCorrect) {
-            answers = answers.map((a) =>
-              a.id === aid ? { ...a, isCorrect: true } : { ...a, isCorrect: false }
-            )
-          }
-
-          return { ...q, answers }
-        })
-      })
-    },
-    [data, questions, onChange]
-  )
-
-  // ── Keyboard shortcuts ────────────────────────────────────────────────────
-  useEntityCreateShortcut({
-    onTier1: addQuestion
-  })
+  // Extract CRUD logic to hook
+  const {
+    questions,
+    addQuestion,
+    addQuestionFromDrop,
+    updateQuestion,
+    deleteQuestion,
+    updateAnswer
+  } = useJumpingFrogCrud(data, _projectDir, onChange)
 
   return (
     <Box sx={{ display: 'flex', height: '100%', overflow: 'hidden' }}>

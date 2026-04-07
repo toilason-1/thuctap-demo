@@ -31,7 +31,7 @@ export default defineConfig(
       ...eslintPluginReactRefresh.configs.vite.rules,
       ...eslintPluginReactCompiler.configs.recommended.rules,
       // TEMPORARILY DISABLED during refactoring - restore after Phase 1-3 complete
-      // 'prettier/prettier': ['error', { endOfLine: 'auto' }],
+      'prettier/prettier': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
