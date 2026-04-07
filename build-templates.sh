@@ -137,18 +137,15 @@ for game_id in "${GAMES[@]}"; do
     rm -rv "$target_dir/" 2>/dev/null || true
     cp -rv "$abs_project/dist/." "$target_dir/"
 
-    # Copy meta.json if it exists in source and not in destination
-    if [[ -f "$abs_project/meta.json" && ! -f "$template_dir/meta.json" ]]; then
+    # Copy meta.json if it exists in source (always overwrite)
+    if [[ -f "$abs_project/meta.json" ]]; then
       cp -v "$abs_project/meta.json" "$template_dir/"
     fi
 
-    # Copy thumbnail.* if it exists in source and not in destination
+    # Copy thumbnail.* if it exists in source (always overwrite)
     for thumb in "$abs_project"/thumbnail.*; do
       if [[ -f "$thumb" ]]; then
-        thumb_basename="$(basename "$thumb")"
-        if [[ ! -f "$template_dir/$thumb_basename" ]]; then
-          cp -v "$thumb" "$template_dir/"
-        fi
+        cp -v "$thumb" "$template_dir/"
       fi
     done
 
