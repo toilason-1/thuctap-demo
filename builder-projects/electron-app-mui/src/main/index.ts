@@ -48,9 +48,7 @@ function writeSettings(data: object): void {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getTemplatesDir(): string {
-  return isDev
-    ? path.join(process.cwd(), 'templates')
-    : path.join(process.resourcesPath, 'templates')
+  return isDev ? path.join(process.cwd(), 'templates') : path.join(app.getAppPath(), 'templates')
 }
 
 /** Returns the game directory for a template — supports both new (game/) and legacy (root) layout */

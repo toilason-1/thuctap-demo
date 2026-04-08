@@ -7,6 +7,7 @@ directories:
 # Merged file strategy
 files:
   - 'out/**/*'
+  - 'templates/**/*'
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
@@ -14,10 +15,10 @@ files:
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 
-# From your package.json extraResources
-extraResources:
-  - from: 'templates'
-    to: 'templates'
+# # From your package.json extraResources
+# extraResources:
+#   - from: 'templates'
+#     to: 'templates'
 
 asar: true
 # asarUnpack:
