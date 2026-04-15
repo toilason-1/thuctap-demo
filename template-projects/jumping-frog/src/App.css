@@ -516,7 +516,7 @@
   width: var(--pad-size);
   aspect-ratio: 1.2 / 1;
   transform: translate(-50%, -50%);
-  background: url('/assets/images/lilypad-platform.png') center / contain no-repeat;
+  background: url('./assets/images/lilypad-platform.png?v=3') center / contain no-repeat;
   filter: drop-shadow(0 18px 24px rgba(7, 48, 33, 0.24));
   opacity: 0.94;
   z-index: 1;
@@ -529,7 +529,7 @@
   width: var(--pad-size);
   aspect-ratio: 1.2 / 1;
   transform: translate(-50%, -50%);
-  background: url('/assets/images/lilypad-platform.png') center / contain no-repeat;
+  background: url('./assets/images/lilypad-platform.png?v=3') center / contain no-repeat;
   filter: drop-shadow(0 16px 22px rgba(7, 48, 33, 0.24));
   opacity: 0.96;
   z-index: 1;
@@ -694,7 +694,7 @@
   color: #f8fff4;
   cursor: pointer;
   transform: translate(-50%, -50%);
-  background: url('/assets/images/lilypad-platform.png') center / contain no-repeat;
+  background: url('./assets/images/lilypad-platform.png?v=3') center / contain no-repeat;
   filter: drop-shadow(0 14px 20px rgba(8, 60, 40, 0.28));
   transition:
     opacity 280ms ease,
@@ -820,7 +820,7 @@
   width: clamp(92px, 9vw, 116px);
   aspect-ratio: 299 / 320;
   transform: translate(-50%, -50%) rotate(var(--frog-rotate)) scale(var(--frog-scale));
-  background: url('/assets/images/froggy-sprite.png') 0 0 / 600% 100% no-repeat;
+  background: url('./assets/images/froggy-sprite.png?v=3') 0 0 / 600% 100% no-repeat;
   transition:
     opacity 180ms ease,
     filter 180ms ease;
@@ -847,7 +847,7 @@
 }
 
 .frog--jumping {
-  animation: frogFrames 0.76s steps(1) both;
+  animation: frogFrames var(--frog-jump-duration, 900ms) linear both;
 }
 
 .frog--landing {
@@ -910,26 +910,32 @@
 }
 
 @keyframes frogFrames {
-  0% {
+  0%,
+  16.66% {
     background-position: 0 0;
   }
 
-  18% {
+  16.67%,
+  33.33% {
     background-position: 20% 0;
   }
 
-  38% {
+  33.34%,
+  50% {
     background-position: 40% 0;
   }
 
-  58% {
+  50.01%,
+  66.66% {
     background-position: 60% 0;
   }
 
-  78% {
+  66.67%,
+  83.33% {
     background-position: 80% 0;
   }
 
+  83.34%,
   100% {
     background-position: 100% 0;
   }

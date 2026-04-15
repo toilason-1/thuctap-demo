@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { MY_QUESTIONS, shuffleQuestionOptions, normalizeOption } from './data'
 
-const SOUND_CROAK = new Audio('./assets/sounds/frog-croak.mp3')
-const SOUND_SPLASH = new Audio('./assets/sounds/e-water-splash-short.mp3')
+const SOUND_CROAK = new Audio('assets/sounds/frog-croak.mp3')
+const SOUND_SPLASH = new Audio('assets/sounds/e-water-splash-short.mp3')
 
 const playSound = (sound) => {
   sound.currentTime = 0
@@ -12,6 +12,8 @@ const playSound = (sound) => {
 
 const START_POSITION = { x: 50, y: 88 }
 const CAMERA_FOCUS = { x: 50, y: 88 }
+const JUMP_DURATION_MS = 900
+const POND_MOTION_FRAME_MS = 1000 / 18
 /** Vi tri dich tren khung nhin (%): giua tren — khop voi vung Finish / dao o UI */
 const FINISH_VIEWPORT_POSITION = { x: 50, y: 24 }
 
@@ -62,6 +64,8 @@ function App() {
   const [showGuideline, setShowGuideline] = useState(false)
   const timeoutsRef = useRef([])
   const animationFrameRef = useRef(null)
+  const frogRef = useRef(null)
+  const lastPondMotionUpdateRef = useRef(0)
   const perchPositionRef = useRef(START_POSITION)
   const frogPositionRef = useRef(START_POSITION)
 
@@ -85,6 +89,17 @@ function App() {
   )
   const isLastQuestion = currentQuestion === MY_QUESTIONS.length - 1
 
+  function applyFrogVisual(nextPosition) {
+    frogPositionRef.current = nextPosition
+
+    if (!frogRef.current) return
+
+    frogRef.current.style.setProperty('--frog-x', `${nextPosition.x}%`)
+    frogRef.current.style.setProperty('--frog-y', `${nextPosition.y}%`)
+    frogRef.current.style.setProperty('--frog-rotate', nextPosition.rotate ?? '0deg')
+    frogRef.current.style.setProperty('--frog-scale', nextPosition.scale ?? '1')
+  }
+
   useEffect(() => {
     if (score > highScore) {
       setHighScore(score)
@@ -97,10 +112,14 @@ function App() {
     const motionStartedAt = performance.now()
 
     const tickMotion = (now) => {
-      setPondMotion((now - motionStartedAt) / 1000)
+      if (now - lastPondMotionUpdateRef.current >= POND_MOTION_FRAME_MS) {
+        lastPondMotionUpdateRef.current = now
+        setPondMotion((now - motionStartedAt) / 1000)
+      }
       motionFrameId = window.requestAnimationFrame(tickMotion)
     }
 
+    lastPondMotionUpdateRef.current = motionStartedAt
     motionFrameId = window.requestAnimationFrame(tickMotion)
 
     return () => {
@@ -122,7 +141,7 @@ function App() {
   }, [perchPosition])
 
   useEffect(() => {
-    frogPositionRef.current = frogPosition
+    applyFrogVisual(frogPosition)
   }, [frogPosition])
 
   const queueTimeout = (callback, delay) => {
@@ -150,7 +169,7 @@ function App() {
     const deltaY = target.y - start.y
     const arcHeight = 16 + Math.abs(deltaX) * 0.22
     const direction = deltaX === 0 ? 0 : deltaX > 0 ? 1 : -1
-    const duration = 760
+    const duration = JUMP_DURATION_MS
     const startedAt = performance.now()
 
     setFrogState('jumping')
@@ -167,7 +186,7 @@ function App() {
       const rotate = `${Math.sin(progress * Math.PI) * direction * 10}deg`
       const scale = (1 + Math.sin(progress * Math.PI) * 0.06).toFixed(3)
 
-      setFrogPosition({
+      applyFrogVisual({
         x: nextX,
         y: nextY,
         rotate,
@@ -180,12 +199,14 @@ function App() {
       }
 
       animationFrameRef.current = null
-      setFrogPosition({
+      const finalPosition = {
         x: target.x,
         y: target.y,
         rotate: '0deg',
         scale: '1',
-      })
+      }
+      applyFrogVisual(finalPosition)
+      setFrogPosition(finalPosition)
       setFrogState('landing')
       onComplete()
     }
@@ -432,11 +453,13 @@ function App() {
 
               <div
                 className={`frog frog--${frogState}`}
+                ref={frogRef}
                 style={{
                   '--frog-x': `${frogPosition.x}%`,
                   '--frog-y': `${frogPosition.y}%`,
                   '--frog-rotate': frogPosition.rotate ?? '0deg',
                   '--frog-scale': frogPosition.scale ?? '1',
+                  '--frog-jump-duration': `${JUMP_DURATION_MS}ms`,
                 }}
                 aria-hidden="true"
               />

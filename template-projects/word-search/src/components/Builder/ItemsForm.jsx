@@ -1,4 +1,6 @@
 import "../../styles/grid.css"; 
+import { resolveTemplateAssetPath } from "../../utils/imageUtils";
+
 export default function ItemsForm({
   items,
   setItems,
@@ -55,7 +57,7 @@ export default function ItemsForm({
           }}
         >
           {item.image ? (
-            <img src={item.image} alt="preview" />
+            <img src={resolveTemplateAssetPath(item.image)} alt="preview" />
           ) : (
             <p>Drop image or click</p>
           )}

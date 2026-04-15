@@ -1,3 +1,41 @@
+const isFileProtocol = () => {
+  if (typeof window === "undefined" || !window.location) return false;
+  const protocol = window.location.protocol?.toLowerCase() || "";
+  const userAgent = window.navigator?.userAgent?.toLowerCase() || "";
+  return protocol === "file:" || protocol === "chrome:" || userAgent.includes("electron");
+};
+
+const isProduction = () => {
+  return typeof import.meta !== "undefined" && import.meta.env?.PROD === true;
+};
+
+export const resolveTemplateAssetPath = (path) => {
+  if (typeof path !== "string") return path;
+
+  const trimmed = path.trim();
+  if (!trimmed) return "";
+
+  const normalized = trimmed.replace(/\\/g, "/");
+
+  if (
+    normalized.startsWith("file://") ||
+    normalized.startsWith("data:") ||
+    /^(https?:)?\/\//i.test(normalized)
+  ) {
+    try { return decodeURI(normalized); } catch { return normalized; }
+  }
+
+  if (normalized.startsWith("assets/") || normalized.startsWith("/")) {
+    return normalized;
+  }
+
+  if (/\.[a-z0-9]+$/i.test(normalized)) {
+    return `assets/user/${normalized}`;
+  }
+
+  return normalized;
+};
+
 export const getBrightness = (url) => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -53,12 +91,13 @@ export const getBrightness = (url) => {
 };
 
 export const formatCssUrl = (path) => {
-  if (!path) return "";
+  const resolvedPath = resolveTemplateAssetPath(path);
+  if (!resolvedPath) return "";
 
   // Ensure we don't have double slashes after file:///
   // and ensure any backslashes are forward slashes for CSS
   // 1. Convert Windows backslashes \ to forward slashes /
-  let cleanPath = path.replace(/\\/g, "/");
+  let cleanPath = resolvedPath.replace(/\\/g, "/");
 
   // 2. Encode special characters (including quotes, spaces, and parens)
   // encodeURI handles the URL structure, but we use replace to
