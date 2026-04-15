@@ -1,4 +1,5 @@
-import { formatCssUrl } from "../../utils/imageUtils";
+import { useEffect, useState } from "react";
+import { formatCssUrl, resolveTemplateAssetPath } from "../../utils/imageUtils";
 import Grid from "../Grid/Grid";
 import ImageHints from "../ImageHints/ImageHints";
 
@@ -17,13 +18,45 @@ export default function GamePreview({
   onPointerMove,
   onPointerUp
 }) {
+  const [hasBackgroundError, setHasBackgroundError] = useState(false);
+  const resolvedBackground = resolveTemplateAssetPath(background);
+
+  useEffect(() => {
+    if (!resolvedBackground) {
+      setHasBackgroundError(false);
+      return;
+    }
+
+    let cancelled = false;
+    const image = new Image();
+
+    image.onload = () => {
+      if (!cancelled) {
+        setHasBackgroundError(false);
+      }
+    };
+
+    image.onerror = () => {
+      if (!cancelled) {
+        setHasBackgroundError(true);
+      }
+    };
+
+    image.src = resolvedBackground;
+
+    return () => {
+      cancelled = true;
+    };
+  }, [resolvedBackground]);
+
+  const activeBackground = hasBackgroundError ? null : resolvedBackground;
   const uniqueFoundCount = new Set(foundWords).size;
   const totalWords = items.length;
   const progressPercent = totalWords ? Math.round((uniqueFoundCount / totalWords) * 100) : 0;
-  const titleStyle = background
+  const titleStyle = activeBackground
     ? { color: "#ffffff", mixBlendMode: "difference" }
     : { color: "#172033" };
-  const helperStyle = background
+  const helperStyle = activeBackground
     ? { color: "#ffffff", mixBlendMode: "difference" }
     : { color: "rgba(23, 32, 51, 0.78)" };
 
@@ -32,7 +65,7 @@ export default function GamePreview({
       <div
         className="overlay-content"
         style={{
-          background: background ? formatCssUrl(background) : undefined,
+          background: activeBackground ? formatCssUrl(activeBackground) : undefined,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",

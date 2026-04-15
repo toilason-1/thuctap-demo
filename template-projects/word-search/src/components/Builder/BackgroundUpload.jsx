@@ -1,4 +1,6 @@
 import "../../styles/grid.css"; 
+import { resolveTemplateAssetPath } from "../../utils/imageUtils";
+
 export default function BackgroundUpload({ background, onUpload }) {
   return (
     <div className="section">
@@ -15,7 +17,7 @@ export default function BackgroundUpload({ background, onUpload }) {
         }}
       >
         {background ? (
-          <img src={background} alt="bg" />
+          <img src={resolveTemplateAssetPath(background)} alt="bg" />
         ) : (
           <p>Drop background</p>
         )}

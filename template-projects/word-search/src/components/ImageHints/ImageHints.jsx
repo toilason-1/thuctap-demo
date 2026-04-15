@@ -1,3 +1,5 @@
+import { resolveTemplateAssetPath } from "../../utils/imageUtils";
+
 export default function ImageHints({ items, foundWords }) {
   const isImagePath = (str) => {
     return str && (str.includes("/") || /\.(jpg|jpeg|png|gif|webp)$/i.test(str));
@@ -25,7 +27,7 @@ export default function ImageHints({ items, foundWords }) {
           className={`hint ${foundWords?.includes(item.word.toUpperCase()) ? "found-hint" : ""}`}
         >
           {isImagePath(item.image) ? (
-            <img src={item.image} alt={item.word} />
+            <img src={resolveTemplateAssetPath(item.image)} alt={item.word} />
           ) : (
             <div className="hint-emoji">
               {item.image}

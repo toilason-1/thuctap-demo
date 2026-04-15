@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import type { WordSearchConfig } from "../types/objects";
+import { resolveTemplateAssetPath } from "../utils/imageUtils";
 
 const DEFAULT_BACKGROUND = "assets/images/word-search-sample-background.svg";
 
@@ -40,13 +41,15 @@ const processItemsToSentenceCase = (
 ): WordSearchConfig["items"] => {
   return items.map((item) => ({
     ...item,
+    image: resolveTemplateAssetPath(item.image) ?? item.image,
     word: toSentenceCase(item.word),
   }));
 };
 
 const resolveBackground = (background?: string): string => {
-  return typeof background === "string" && background.trim()
-    ? background
+  const resolved = resolveTemplateAssetPath(background);
+  return typeof resolved === "string" && resolved.trim()
+    ? resolved
     : DEFAULT_BACKGROUND;
 };
 
