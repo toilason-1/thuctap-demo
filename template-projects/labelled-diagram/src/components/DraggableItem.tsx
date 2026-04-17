@@ -7,7 +7,15 @@ interface Props {
 
 export const ItemCard: React.FC<Props> = ({ item }) => {
   return (
-    <div className="px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg shadow-md text-sm font-semibold border border-purple-400/50 whitespace-nowrap">
+    <div className="
+      px-4 py-2 rounded-xl
+      bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500
+      text-white font-semibold text-sm
+      shadow-lg border border-white/30
+      hover:scale-105 hover:shadow-xl
+      transition-all duration-200
+      cursor-grab active:cursor-grabbing
+    ">
       {item.name}
     </div>
   );

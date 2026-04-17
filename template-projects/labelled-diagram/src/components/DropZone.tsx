@@ -27,14 +27,15 @@ const DropZone: React.FC<Props> = ({ point, placedLabelId }) => {
       <div
         className={`
           flex items-center justify-center
-          w-9 h-9 rounded-full text-sm font-bold
+          w-10 h-10 rounded-full text-sm font-bold
           shadow-lg border border-white/30
-          transition-all duration-200
+          transition-all duration-300
 
-          ${isOver ? "scale-110 bg-cyan-400" : ""}
+          ${isOver ? "scale-125 bg-cyan-400 animate-pulse" : ""}
+
           ${
             isCorrect
-              ? "bg-green-400 text-black"
+              ? "bg-green-400 text-black animate-bounce"
               : placedLabelId
               ? "bg-red-400 text-white"
               : "bg-white/80 text-black"
