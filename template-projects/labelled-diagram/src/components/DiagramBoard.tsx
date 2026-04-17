@@ -18,7 +18,8 @@ const DiagramBoard: React.FC<Props> = ({ data, placed }) => {
         {/* 🔥 BACKGROUND IMAGE */}
         {data?.imagePath ? (
           <div
-            className="absolute inset-0 bg-center bg-contain bg-no-repeat"
+            className="absolute inset-0 bg-center bg-contain bg-no-repeat
+              transition-all duration-500"
             style={{
               backgroundImage: `url(${data.imagePath})`,
             }}
