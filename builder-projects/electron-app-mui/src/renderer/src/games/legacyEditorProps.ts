@@ -1,8 +1,9 @@
 import { AnyAppData } from '@shared'
 
 // Generic base for legacy editors.
-export type LegacyEditorProps = {
-  appData: AnyAppData
+// T defaults to AnyAppData for backward compatibility at generic usage sites.
+export type LegacyEditorProps<T extends AnyAppData = AnyAppData> = {
+  appData: T
   projectDir: string
-  onChange: (data: AnyAppData) => void
+  onChange: (data: T) => void
 }

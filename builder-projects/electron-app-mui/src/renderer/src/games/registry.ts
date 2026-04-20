@@ -1,15 +1,4 @@
-/**
- * Game Registry — the single file to update when adding a new game.
- *
- * To add a new game:
- *  1. Build your game template project and add it under template-projects/<game-id>/
- *  2. Create your editor component at  games/<game-id>/<Name>Editor.tsx
- *  3. Import it below and add one entry to GAME_REGISTRY
- *  4. If the game needs a runtime data transform, also add it to
- *     src/main/gameRegistry.ts
- */
-
-import type { AnyAppData } from '@shared/types'
+import type { AnyAppData, GameAppDataMap } from '@shared/types'
 import type { ComponentType } from 'react'
 
 import BalloonLetterPickerEditor from './balloon-letter-picker/BalloonLetterPickerEditor'
@@ -24,97 +13,200 @@ import WordSearchEditor from './word-search/WordSearchEditor'
 import { wrapEditor } from '@renderer/components/wrapEditor'
 import { EditorWrapperHandle } from '@renderer/components/EditorWrapper'
 
-export interface GameRegistryEntry {
+export interface GameRegistryEntry<T extends AnyAppData> {
   /** Editor component rendered on the ProjectPage */
   Editor: ComponentType<{
-    ref: React.ForwardedRef<EditorWrapperHandle>
-    initialData: AnyAppData
+    ref: React.ForwardedRef<EditorWrapperHandle<T>>
+    initialData: T
     projectDir: string
-    onCommit: (data: AnyAppData) => void
+    onCommit: (data: T) => void
   }>
   /** Returns a fresh, empty appData object for new projects */
-  createInitialData: () => AnyAppData
+  createInitialData: () => T
+  /**
+   * Normalizes possibly partial or old data into a complete, current-version AppData object.
+   * This is called before passing data to the editor.
+   */
+  normalize: (data: AnyAppData) => T
+}
+
+/**
+ * Type-safe registry map.
+ * This avoids 'any' by using the GameAppDataMap to ensure each key has the correct T.
+ */
+export type GameRegistry = {
+  [K in keyof GameAppDataMap]: GameRegistryEntry<GameAppDataMap[K]>
 }
 
 // ── Add new games here ────────────────────────────────────────────────────────
-export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
+export const GAME_REGISTRY: GameRegistry = {
   'group-sort': {
-    Editor: wrapEditor(GroupSortEditor) as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(GroupSortEditor),
     createInitialData: () => ({
       groups: [],
       items: [],
       _groupCounter: 0,
       _itemCounter: 0
-    })
+    }),
+    normalize: (d) => {
+      const g = d as GameAppDataMap['group-sort']
+      return {
+        ...g,
+        groups: g.groups ?? [],
+        items: g.items ?? [],
+        _groupCounter: g._groupCounter ?? 0,
+        _itemCounter: g._itemCounter ?? 0
+      }
+    }
   },
 
   'plane-quiz': {
-    Editor: wrapEditor(QuizEditor) as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(QuizEditor),
     createInitialData: () => ({
       questions: [],
       _questionCounter: 0
-    })
+    }),
+    normalize: (d) => {
+      const q = d as GameAppDataMap['plane-quiz']
+      return {
+        ...q,
+        questions: (q.questions ?? []).map((question) => ({
+          ...question,
+          answers: question.answers ?? [],
+          _answerCounter: question._answerCounter ?? 0
+        })),
+        _questionCounter: q._questionCounter ?? 0
+      }
+    }
   },
 
   'balloon-letter-picker': {
-    Editor: wrapEditor(BalloonLetterPickerEditor) as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(BalloonLetterPickerEditor),
     createInitialData: () => ({
       words: [],
       _wordCounter: 0
-    })
+    }),
+    normalize: (d) => {
+      const b = d as GameAppDataMap['balloon-letter-picker']
+      return {
+        ...b,
+        words: b.words ?? [],
+        _wordCounter: b._wordCounter ?? 0
+      }
+    }
   },
 
   'pair-matching': {
-    Editor: wrapEditor(PairMatchingEditor) as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(PairMatchingEditor),
     createInitialData: () => ({
       items: [],
       minTotalPairs: 2,
       _itemCounter: 0
-    })
+    }),
+    normalize: (d) => {
+      const p = d as GameAppDataMap['pair-matching']
+      return {
+        ...p,
+        items: p.items ?? [],
+        minTotalPairs: p.minTotalPairs ?? 2,
+        _itemCounter: p._itemCounter ?? 0
+      }
+    }
   },
 
   'word-search': {
-    Editor: wrapEditor(WordSearchEditor) as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(WordSearchEditor),
     createInitialData: () => ({
       items: [],
       _itemCounter: 0
-    })
+    }),
+    normalize: (d) => {
+      const w = d as GameAppDataMap['word-search']
+      return {
+        ...w,
+        items: w.items ?? [],
+        _itemCounter: w._itemCounter ?? 0
+      }
+    }
   },
 
   'whack-a-mole': {
-    Editor: wrapEditor(WhackAMoleEditor) as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(WhackAMoleEditor),
     createInitialData: () => ({
       title: '',
       grade: '',
       questions: [],
       _questionCounter: 0
-    })
+    }),
+    normalize: (d) => {
+      const w = d as GameAppDataMap['whack-a-mole']
+      return {
+        ...w,
+        title: w.title ?? '',
+        grade: w.grade ?? '',
+        questions: w.questions ?? [],
+        _questionCounter: w._questionCounter ?? 0
+      }
+    }
   },
 
   'labelled-diagram': {
-    Editor: wrapEditor(LabelledDiagramEditor) as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(LabelledDiagramEditor),
     createInitialData: () => ({
       imagePath: null,
       points: [],
       _pointCounter: 0
-    })
+    }),
+    normalize: (d) => {
+      const l = d as GameAppDataMap['labelled-diagram']
+      return {
+        ...l,
+        imagePath: l.imagePath ?? null,
+        points: l.points ?? [],
+        _pointCounter: l._pointCounter ?? 0
+      }
+    }
   },
 
   'find-the-treasure': {
-    Editor: wrapEditor(FindTheTreasureEditor) as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(FindTheTreasureEditor),
     createInitialData: () => ({
       stages: [],
       _stageCounter: 0,
       _answerCounter: 0
-    })
+    }),
+    normalize: (d) => {
+      const f = d as GameAppDataMap['find-the-treasure']
+      return {
+        ...f,
+        stages: (f.stages ?? []).map((s) => ({
+          ...s,
+          answers: s.answers ?? []
+        })),
+        _stageCounter: f._stageCounter ?? 0,
+        _answerCounter: f._answerCounter ?? 0
+      }
+    }
   },
 
   'jumping-frog': {
-    Editor: wrapEditor(JumpingFrogEditor) as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(JumpingFrogEditor),
     createInitialData: () => ({
       questions: [],
       _questionCounter: 0,
       _answerCounter: 0
-    })
+    }),
+    normalize: (d) => {
+      const j = d as GameAppDataMap['jumping-frog']
+      return {
+        ...j,
+        questions: (j.questions ?? []).map((q) => ({
+          ...q,
+          answers: q.answers ?? []
+        })),
+        _questionCounter: j._questionCounter ?? 0,
+        _answerCounter: j._answerCounter ?? 0
+      }
+    }
   }
 }

@@ -7,28 +7,19 @@ import { useState } from 'react'
 import { SettingsTab, WordsTab } from './components'
 import { useWordSearchCrud } from './hooks/useWordSearchCrud'
 
-interface Props {
-  appData: WordSearchAppData
-  projectDir: string
-  onChange: (data: WordSearchAppData) => void
-}
+import { LegacyEditorProps } from '../legacyEditorProps'
 
 type Tab = 'words' | 'settings'
 
-function normalize(d: WordSearchAppData): WordSearchAppData {
-  return { ...d, _itemCounter: d._itemCounter ?? 0, items: d.items ?? [] }
-}
-
 export default function WordSearchEditor({
-  appData: raw,
+  appData,
   projectDir,
   onChange
-}: Props): React.JSX.Element {
-  const data = normalize(raw)
+}: LegacyEditorProps<WordSearchAppData>): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('words')
-  const { items } = data
+  const { items } = appData
   const { addItem, addItemFromDrop, updateItem, deleteItem } = useWordSearchCrud(
-    data,
+    appData,
     projectDir,
     onChange
   )
@@ -90,7 +81,7 @@ export default function WordSearchEditor({
           />
         )}
         {tab === 'settings' && (
-          <SettingsTab data={data} projectDir={projectDir} onChange={onChange} />
+          <SettingsTab data={appData} projectDir={projectDir} onChange={onChange} />
         )}
       </Box>
     </Box>

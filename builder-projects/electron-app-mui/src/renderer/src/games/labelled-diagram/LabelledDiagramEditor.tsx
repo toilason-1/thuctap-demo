@@ -15,11 +15,7 @@ import { useDiagramInteraction } from './hooks/useDiagramInteraction'
 import { useLabelledDiagramPoints } from './hooks/useLabelledDiagramPoints'
 import { DIAGRAM_PADDING, gridBackground } from './styles'
 
-interface Props {
-  appData: LabelledDiagramAppData
-  projectDir: string
-  onChange: (data: LabelledDiagramAppData) => void
-}
+import { LegacyEditorProps } from '../legacyEditorProps'
 
 /**
  * Main editor for Labelled Diagram games.
@@ -30,7 +26,7 @@ export default function LabelledDiagramEditor({
   appData,
   projectDir,
   onChange
-}: Props): JSX.Element {
+}: LegacyEditorProps<LabelledDiagramAppData>): JSX.Element {
   const { imagePath } = appData
   const [imgSize, setImgSize] = useState<{ width: number; height: number } | null>(null)
   const [prevImagePath, setPrevImagePath] = useState(imagePath)

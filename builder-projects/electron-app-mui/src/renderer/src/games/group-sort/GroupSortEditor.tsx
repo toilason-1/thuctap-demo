@@ -8,25 +8,15 @@ import { GroupSortAppData } from '@shared/types'
 import { JSX, useState } from 'react'
 import { GroupsTab, ItemsTab, OverviewTab } from './components'
 import { useGroupSortCrud } from './hooks/useGroupSortCrud'
-
-interface Props {
-  appData: GroupSortAppData
-  projectDir: string
-  onChange: (data: GroupSortAppData) => void
-}
+import { LegacyEditorProps } from '../legacyEditorProps'
 
 type Tab = 'groups' | 'items' | 'overview'
 
-function normalize(d: GroupSortAppData): GroupSortAppData {
-  return { ...d, _groupCounter: d._groupCounter ?? 0, _itemCounter: d._itemCounter ?? 0 }
-}
-
 export default function GroupSortEditor({
-  appData: raw,
+  appData,
   projectDir,
   onChange
-}: Props): JSX.Element {
-  const data = normalize(raw)
+}: LegacyEditorProps<GroupSortAppData>): JSX.Element {
   const [tab, setTab] = useState<Tab>('groups')
   const {
     groups,
@@ -39,7 +29,7 @@ export default function GroupSortEditor({
     addItemFromDrop,
     updateItem,
     deleteItem
-  } = useGroupSortCrud(data, projectDir, onChange)
+  } = useGroupSortCrud(appData, projectDir, onChange)
 
   // ── Validation ──────────────────────────────────────────────────────────
   const unassigned = items.filter((i) => !i.groupId || !groups.find((g) => g.id === i.groupId))

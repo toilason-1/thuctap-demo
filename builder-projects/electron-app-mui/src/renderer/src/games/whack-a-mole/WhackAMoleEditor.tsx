@@ -7,34 +7,19 @@ import React, { useState } from 'react'
 import { QuestionsTab, SettingsTab } from './components'
 import { useWhackAMoleCrud } from './hooks/useWhackAMoleCrud'
 
-interface Props {
-  appData: WhackAMoleAppData
-  projectDir: string
-  onChange: (data: WhackAMoleAppData) => void
-}
+import { LegacyEditorProps } from '../legacyEditorProps'
 
 type Tab = 'questions' | 'settings'
 
-function normalize(d: WhackAMoleAppData): WhackAMoleAppData {
-  return {
-    ...d,
-    title: d.title ?? '',
-    grade: d.grade ?? '',
-    _questionCounter: d._questionCounter ?? 0,
-    questions: d.questions ?? []
-  }
-}
-
 export default function WhackAMoleEditor({
-  appData: raw,
+  appData,
   projectDir,
   onChange
-}: Props): React.ReactElement {
-  const data = normalize(raw)
+}: LegacyEditorProps<WhackAMoleAppData>): React.ReactElement {
   const [tab, setTab] = useState<Tab>('questions')
-  const { questions } = data
+  const { questions } = appData
   const { addQuestion, addQuestionFromDrop, updateQuestion, deleteQuestion } = useWhackAMoleCrud(
-    data,
+    appData,
     projectDir,
     onChange
   )
@@ -94,7 +79,7 @@ export default function WhackAMoleEditor({
           />
         )}
         {tab === 'settings' && (
-          <SettingsTab data={data} projectDir={projectDir} onChange={onChange} />
+          <SettingsTab data={appData} projectDir={projectDir} onChange={onChange} />
         )}
       </Box>
     </Box>

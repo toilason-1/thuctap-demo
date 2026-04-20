@@ -7,28 +7,19 @@ import { JSX, useState } from 'react'
 import { PairsTab, SettingsTab } from './components'
 import { usePairCrud } from './hooks/usePairCrud'
 
-interface Props {
-  appData: PairMatchingAppData
-  projectDir: string
-  onChange: (data: PairMatchingAppData) => void
-}
+import { LegacyEditorProps } from '../legacyEditorProps'
 
 type Tab = 'pairs' | 'settings'
 
-function normalize(d: PairMatchingAppData): PairMatchingAppData {
-  return { ...d, _itemCounter: d._itemCounter ?? 0, items: d.items ?? [] }
-}
-
 export default function PairMatchingEditor({
-  appData: raw,
+  appData,
   projectDir,
   onChange
-}: Props): JSX.Element {
-  const data = normalize(raw)
+}: LegacyEditorProps<PairMatchingAppData>): JSX.Element {
   const [tab, setTab] = useState<Tab>('pairs')
-  const { items } = data
+  const { items } = appData
   const { addItem, addItemFromDrop, updateItem, deleteItem } = usePairCrud(
-    data,
+    appData,
     projectDir,
     onChange
   )
@@ -88,7 +79,7 @@ export default function PairMatchingEditor({
           />
         )}
         {tab === 'settings' && (
-          <SettingsTab data={data} projectDir={projectDir} onChange={onChange} />
+          <SettingsTab data={appData} projectDir={projectDir} onChange={onChange} />
         )}
       </Box>
     </Box>

@@ -4,30 +4,20 @@ import { JSX } from 'react'
 import { SummarySidebar, WordsTab } from './components'
 import { useBalloonCrud } from './hooks/useBalloonCrud'
 
-interface Props {
-  appData: BalloonLetterPickerAppData
-  projectDir: string
-  onChange: (data: BalloonLetterPickerAppData) => void
-}
-
-function normalize(d: BalloonLetterPickerAppData): BalloonLetterPickerAppData {
-  return { ...d, _wordCounter: d._wordCounter ?? 0, words: d.words ?? [] }
-}
+import { LegacyEditorProps } from '../legacyEditorProps'
 
 /**
  * Balloon Letter Picker Editor
  * Teachers create words where students pop balloons to spell words from hints.
  */
 export default function BalloonLetterPickerEditor({
-  appData: raw,
+  appData,
   projectDir,
   onChange
-}: Props): JSX.Element {
-  const data = normalize(raw)
-
+}: LegacyEditorProps<BalloonLetterPickerAppData>): JSX.Element {
   // Extract CRUD logic to hook
   const { words, addWord, addWordFromDrop, updateWord, deleteWord } = useBalloonCrud(
-    data,
+    appData,
     projectDir,
     onChange
   )

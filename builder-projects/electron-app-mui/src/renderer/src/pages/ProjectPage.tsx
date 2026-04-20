@@ -24,6 +24,7 @@ import type { AnyAppData, ProjectFile, ProjectMeta } from '@shared/types'
 import { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useBoolean, useInterval, useUnmount } from 'usehooks-ts'
+import { GAME_REGISTRY } from '@renderer/games/registry'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const AUTO_SAVE_DEBOUNCE_MS = 1000
@@ -494,6 +495,18 @@ export default function ProjectPage(): JSX.Element {
     data: ProjectFile
   } | null
 
+  const initialData = useMemo(() => {
+    const rawData = locationState?.data.appData ?? ({} as AnyAppData)
+    if (!templateId) {
+      return rawData
+    }
+    const entry = GAME_REGISTRY[templateId]
+    if (entry) {
+      return entry.normalize(rawData)
+    }
+    return rawData
+  }, [locationState, templateId])
+
   if (!templateId) {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
@@ -504,7 +517,7 @@ export default function ProjectPage(): JSX.Element {
   }
 
   return (
-    <ProjectHistoryProvider initialState={locationState?.data.appData ?? ({} as AnyAppData)}>
+    <ProjectHistoryProvider initialState={initialData}>
       <ProjectPageInner templateId={templateId} locationState={locationState} />
     </ProjectHistoryProvider>
   )

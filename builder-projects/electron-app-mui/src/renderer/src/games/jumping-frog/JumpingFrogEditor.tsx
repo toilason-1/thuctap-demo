@@ -4,32 +4,17 @@ import { JumpingFrogAppData } from '../../types'
 import { QuestionsTab, SummarySidebar } from './components'
 import { useJumpingFrogCrud } from './hooks/useJumpingFrogCrud'
 
-interface Props {
-  appData: JumpingFrogAppData
-  projectDir: string
-  onChange: (data: JumpingFrogAppData) => void
-}
-
-function normalize(d: JumpingFrogAppData): JumpingFrogAppData {
-  return {
-    ...d,
-    _questionCounter: d._questionCounter ?? 0,
-    _answerCounter: d._answerCounter ?? 0,
-    questions: d.questions ?? []
-  }
-}
+import { LegacyEditorProps } from '../legacyEditorProps'
 
 /**
  * Jumping Frog Editor
  * Teachers create questions where students select the correct answer by jumping on frogs.
  */
 export default function JumpingFrogEditor({
-  appData: raw,
+  appData,
   projectDir: _projectDir,
   onChange
-}: Props): React.ReactElement {
-  const data = normalize(raw)
-
+}: LegacyEditorProps<JumpingFrogAppData>): React.ReactElement {
   // Extract CRUD logic to hook
   const {
     questions,
@@ -38,7 +23,7 @@ export default function JumpingFrogEditor({
     updateQuestion,
     deleteQuestion,
     updateAnswer
-  } = useJumpingFrogCrud(data, _projectDir, onChange)
+  } = useJumpingFrogCrud(appData, _projectDir, onChange)
 
   return (
     <Box sx={{ display: 'flex', height: '100%', overflow: 'hidden' }}>

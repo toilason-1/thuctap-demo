@@ -5,27 +5,13 @@ import type { Tab } from './components'
 import { StageSidebar, StagesTab } from './components'
 import { useFindTheTreasureCrud } from './hooks/useFindTheTreasureCrud'
 
-interface Props {
-  appData: FindTheTreasureAppData
-  projectDir: string
-  onChange: (data: FindTheTreasureAppData) => void
-}
-
-function normalize(d: FindTheTreasureAppData): FindTheTreasureAppData {
-  return {
-    ...d,
-    _stageCounter: d._stageCounter ?? 0,
-    _answerCounter: d._answerCounter ?? 0,
-    stages: d.stages ?? []
-  }
-}
+import { LegacyEditorProps } from '../legacyEditorProps'
 
 export default function FindTheTreasureEditor({
-  appData: raw,
+  appData,
   projectDir,
   onChange
-}: Props): React.ReactElement {
-  const data = normalize(raw)
+}: LegacyEditorProps<FindTheTreasureAppData>): React.ReactElement {
   const [tab, setTab] = useState<Tab>('stages')
   const {
     stages,
@@ -38,7 +24,7 @@ export default function FindTheTreasureEditor({
     addAnswer,
     updateAnswer,
     deleteAnswer
-  } = useFindTheTreasureCrud(data, projectDir, onChange)
+  } = useFindTheTreasureCrud(appData, projectDir, onChange)
 
   // ── Stage selection ─────────────────────────────────────────────────────
   const handleStageSelect = (stageId: string): void => {

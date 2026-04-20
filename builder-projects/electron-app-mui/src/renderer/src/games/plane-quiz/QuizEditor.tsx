@@ -4,26 +4,13 @@ import React from 'react'
 import { QuizTab, SummarySidebar } from './components'
 import { usePlaneQuizCrud } from './hooks/usePlaneQuizCrud'
 
-interface Props {
-  appData: QuizAppData
-  projectDir: string
-  onChange: (data: QuizAppData) => void
-}
-
-function normalize(d: QuizAppData): QuizAppData {
-  return {
-    ...d,
-    _questionCounter: d._questionCounter ?? 0,
-    questions: (d.questions ?? []).map((q) => ({ ...q, _answerCounter: q._answerCounter ?? 0 }))
-  }
-}
+import { LegacyEditorProps } from '../legacyEditorProps'
 
 export default function QuizEditor({
-  appData: raw,
+  appData,
   projectDir,
   onChange
-}: Props): React.ReactElement {
-  const data = normalize(raw)
+}: LegacyEditorProps<QuizAppData>): React.ReactElement {
   const {
     questions,
     addQuestion,
@@ -33,7 +20,7 @@ export default function QuizEditor({
     addAnswer,
     updateAnswer,
     deleteAnswer
-  } = usePlaneQuizCrud(data, projectDir, onChange)
+  } = usePlaneQuizCrud(appData, projectDir, onChange)
 
   return (
     <Box sx={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
