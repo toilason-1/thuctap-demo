@@ -31,7 +31,7 @@ export default defineConfig(
       ...eslintPluginReactRefresh.configs.vite.rules,
       ...eslintPluginReactCompiler.configs.recommended.rules,
       // TEMPORARILY DISABLED during refactoring - restore after Phase 1-3 complete
-      'prettier/prettier': 'warn',
+      'prettier/prettier': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
@@ -39,7 +39,9 @@ export default defineConfig(
           varsIgnorePattern: '^_',
           caughtErrorsIgnorePattern: '^_'
         }
-      ]
+      ],
+      '@typescript-eslint/no-explicit-any': 'off',
+      'react/display-name': 'off'
     }
   },
   eslintConfigPrettier

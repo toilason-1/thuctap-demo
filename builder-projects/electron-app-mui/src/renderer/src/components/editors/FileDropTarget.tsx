@@ -21,7 +21,6 @@ export function FileDropTarget({
   disabled
 }: FileDropTargetProps): React.ReactElement {
   const { getRootProps, isDragActive } = useDropzone({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onDrop: (acceptedFiles: any[], _rejections, event: any) => {
       // Prevent bubbling to parents (e.g. from item card to group card)
       event?.stopPropagation()
@@ -32,7 +31,7 @@ export function FileDropTarget({
     },
     onDragEnter: (e) => e.stopPropagation(),
     onDragOver: (e) => e.stopPropagation(),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     getFilesFromEvent: (event: any): any => {
       const files = event.dataTransfer?.files
       return files ? Array.from(files) : []

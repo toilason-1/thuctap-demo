@@ -64,7 +64,6 @@ export default function ImagePicker({
 
   // ── Drag & drop support ──────────────────────────────────────────────────
   const { getRootProps, isDragActive } = useDropzone({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onDrop: (acceptedFiles: any[], _rejections, event: any) => {
       event?.stopPropagation()
       const file = acceptedFiles.find((f) => f.type?.startsWith('image/'))
@@ -74,7 +73,7 @@ export default function ImagePicker({
     },
     onDragEnter: (e) => e.stopPropagation(),
     onDragOver: (e) => e.stopPropagation(),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     getFilesFromEvent: (event: any): any => {
       const files = event.dataTransfer?.files
       return files ? Array.from(files) : []

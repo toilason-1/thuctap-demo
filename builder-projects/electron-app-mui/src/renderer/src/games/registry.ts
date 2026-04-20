@@ -21,6 +21,7 @@ import PairMatchingEditor from './pair-matching/PairMatchingEditor'
 import QuizEditor from './plane-quiz/QuizEditor'
 import WhackAMoleEditor from './whack-a-mole/WhackAMoleEditor'
 import WordSearchEditor from './word-search/WordSearchEditor'
+import { wrapEditor } from '../components/EditorWrapper'
 
 export interface GameRegistryEntry {
   /** Editor component rendered on the ProjectPage */
@@ -36,7 +37,7 @@ export interface GameRegistryEntry {
 // ── Add new games here ────────────────────────────────────────────────────────
 export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
   'group-sort': {
-    Editor: GroupSortEditor as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(GroupSortEditor) as GameRegistryEntry['Editor'],
     createInitialData: () => ({
       groups: [],
       items: [],
@@ -46,7 +47,7 @@ export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
   },
 
   'plane-quiz': {
-    Editor: QuizEditor as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(QuizEditor) as GameRegistryEntry['Editor'],
     createInitialData: () => ({
       questions: [],
       _questionCounter: 0
@@ -54,7 +55,7 @@ export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
   },
 
   'balloon-letter-picker': {
-    Editor: BalloonLetterPickerEditor as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(BalloonLetterPickerEditor) as GameRegistryEntry['Editor'],
     createInitialData: () => ({
       words: [],
       _wordCounter: 0
@@ -62,7 +63,7 @@ export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
   },
 
   'pair-matching': {
-    Editor: PairMatchingEditor as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(PairMatchingEditor) as GameRegistryEntry['Editor'],
     createInitialData: () => ({
       items: [],
       minTotalPairs: 2,
@@ -71,7 +72,7 @@ export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
   },
 
   'word-search': {
-    Editor: WordSearchEditor as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(WordSearchEditor) as GameRegistryEntry['Editor'],
     createInitialData: () => ({
       items: [],
       _itemCounter: 0
@@ -79,7 +80,7 @@ export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
   },
 
   'whack-a-mole': {
-    Editor: WhackAMoleEditor as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(WhackAMoleEditor) as GameRegistryEntry['Editor'],
     createInitialData: () => ({
       title: '',
       grade: '',
@@ -89,7 +90,7 @@ export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
   },
 
   'labelled-diagram': {
-    Editor: LabelledDiagramEditor as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(LabelledDiagramEditor) as GameRegistryEntry['Editor'],
     createInitialData: () => ({
       imagePath: null,
       points: [],
@@ -98,7 +99,7 @@ export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
   },
 
   'find-the-treasure': {
-    Editor: FindTheTreasureEditor as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(FindTheTreasureEditor) as GameRegistryEntry['Editor'],
     createInitialData: () => ({
       stages: [],
       _stageCounter: 0,
@@ -107,7 +108,7 @@ export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
   },
 
   'jumping-frog': {
-    Editor: JumpingFrogEditor as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(JumpingFrogEditor) as GameRegistryEntry['Editor'],
     createInitialData: () => ({
       questions: [],
       _questionCounter: 0,
