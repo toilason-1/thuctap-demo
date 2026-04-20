@@ -53,6 +53,8 @@ The builder currently supports **9 game templates**:
 - [TypeScript Type System](#typescript-type-system)
 - [IPC Communication (Type-Safe)](#ipc-communication-type-safe)
 - [Data Flow](#data-flow)
+  - [Project Data Lifecycle (Uncontrolled Architecture)](#project-data-lifecycle-uncontrolled-architecture)
+  - [Editor API](#editor-api)
 - [Adding a New Game](#adding-a-new-game)
 - [Development Workflow](#development-workflow)
 - [Common Patterns and Best Practices](#common-patterns-and-best-practices)
@@ -301,20 +303,39 @@ const status = await window.electronAPI.checkFolderStatus('/some/path')
 
 ## Data Flow
 
-### Project Data Lifecycle
+> **Note**: This section describes the **target uncontrolled architecture**. See [UNCONTROLLED_EDITORS_PLAN.md](./UNCONTROLLED_EDITORS_PLAN.md) for implementation details.
+>
+> **Current Status**: Editors are being migrated one at a time from controlled (`onChange` on every keystroke) to uncontrolled (TanStack Form with commit-on-blur).
+
+### Project Data Lifecycle (Uncontrolled Architecture)
 
 ```
 ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│  Editor (UI)    │─────►│  Project State  │─────►│  Save to Disk   │
-│  (onChange)     │      │  (Context)      │      │  (IPC: save)    │
-└─────────────────┘      └─────────────────┘      └─────────────────┘
-                                │
-                                ▼
-                       ┌─────────────────┐
-                       │  Preview/Export │
-                       │  (Data Transform)│
-                       └─────────────────┘
+│  Editor (UI)    │      │  Project State  │─────►│  Save to Disk   │
+│  TanStack Form  │      │  (Context)      │      │  (IPC: save)    │
+│  (internal)     │      │                 │      │                 │
+└────────┬────────┘      └────────┬────────┘      └─────────────────┘
+         │                        │
+         │ getValue() (on save)   │ setPresent() (on commit)
+         │ setValue() (on undo)  │
+         ▼                        ▼
+┌─────────────────┐      ┌─────────────────┐
+│  Form State     │◄─────│  History       │
+│  (get/set)      │      │  (undo/redo)   │
+└─────────────────┘      └─────────────────┘
 ```
+
+### Editor API
+
+When using uncontrolled editors:
+
+| Prop | Direction | Description |
+|------|-----------|-------------|
+| `initialData` | Parent → Editor | Initial data on first render (project load) |
+| `projectDir` | Parent → Editor | Project directory for image imports |
+| `getValue` | Parent → Editor | Function to synchronously pull current form state |
+| `setValue` | Parent → Editor | Function to reset editor state (for undo) |
+| `onCommit` | Editor → Parent | Callback when user commits changes (blur/save) |
 
 ### Data Transforms (`src/main/gameRegistry.ts`)
 
