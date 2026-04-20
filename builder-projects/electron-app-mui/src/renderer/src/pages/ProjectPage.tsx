@@ -86,15 +86,24 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
   useAppDocumentTitle(documentTitle)
 
   // Wrapped undo/redo that marks document as dirty
+  // For uncontrolled editors, also reset the editor's form state
   const handleUndo = useCallback(() => {
+    const previousData = getHistory()[getHistory().length - 2]
+    if (previousData && editorRef.current.setValue) {
+      editorRef.current.setValue(previousData as AnyAppData)
+    }
     historyUndo()
     setIsDirty(true)
-  }, [historyUndo])
+  }, [historyUndo, getHistory])
 
   const handleRedo = useCallback(() => {
+    const nextData = getHistory()[getHistory().length - 1]
+    if (nextData && editorRef.current.setValue) {
+      editorRef.current.setValue(nextData as AnyAppData)
+    }
     historyRedo()
     setIsDirty(true)
-  }, [historyRedo])
+  }, [historyRedo, getHistory])
 
   // Sync project settings to context
   useEffect(() => {
@@ -130,6 +139,14 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
   const metaRef = useRef(meta)
   const appDataRef = useRef(appData)
   const isDirtyRef = useRef(isDirty)
+
+  // ── Ref for uncontrolled editor (TanStack Form) ────────────────────────────
+  // Holds getValue/setValue methods from uncontrolled editors
+  const editorRef = useRef<{
+    getValue?: () => AnyAppData
+    setValue?: (data: AnyAppData) => void
+    onCommit?: (data: AnyAppData) => void
+  }>({})
 
   // Keep refs in sync - update synchronously to avoid stale closures
   useEffect(() => {
@@ -272,7 +289,9 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
     }
 
     try {
-      await doSave(meta, appData)
+      // For uncontrolled editors, get current value from editor before saving
+      const dataToSave = editorRef.current.getValue?.() ?? appData
+      await doSave(meta, dataToSave)
       showSnack('Project saved!')
     } catch (e) {
       showSnack(`Save failed: ${e}`, 'error')
@@ -399,7 +418,17 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
             )
           const { Editor } = entry
           return (
-            <Editor appData={appData} projectDir={meta.projectDir} onChange={handleAppDataChange} />
+            <Editor
+              // Uncontrolled API (new)
+              initialData={appData}
+              projectDir={meta.projectDir}
+              getValue={() => editorRef.current.getValue?.() ?? appData}
+              setValue={(data) => editorRef.current.setValue?.(data)}
+              onCommit={(data) => {
+                editorRef.current.onCommit?.(data)
+                handleAppDataChange(data)
+              }}
+            />
           )
         })()}
       </Box>
