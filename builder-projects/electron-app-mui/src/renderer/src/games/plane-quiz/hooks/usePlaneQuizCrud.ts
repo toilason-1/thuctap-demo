@@ -1,7 +1,6 @@
 /**
  * Hook for Plane Quiz entity CRUD operations.
  * Manages questions and answers (nested within questions) with counter-based ID generation.
- * Uses onCommit instead of onChange - commits on user actions (blur, buttons, toggles).
  */
 
 import { useEntityCreateShortcut } from '@renderer/hooks/useEntityCreateShortcut'
@@ -21,14 +20,22 @@ interface UsePlaneQuizCrudReturn {
   deleteAnswer: (qid: string, aid: string) => void
 }
 
+/**
+ * Provides CRUD operations for plane quiz questions and answers.
+ *
+ * @param data - Normalized appData
+ * @param projectDir - Project directory path for image imports
+ * @param onChange - State update callback
+ */
 export function usePlaneQuizCrud(
   data: QuizAppData,
   projectDir: string,
-  onCommit: (data: QuizAppData) => void
+  onChange: (data: QuizAppData) => void
 ): UsePlaneQuizCrudReturn {
   const { resolved } = useSettings()
   const { questions } = data
 
+  // ── Question CRUD ─────────────────────────────────────────────────────────
   const addQuestion = useCallback(
     (initialImage?: string) => {
       const qc = data._questionCounter + 1
@@ -44,9 +51,9 @@ export function usePlaneQuizCrud(
           { id: `${qid}-a-2`, text: resolved.prefillNames ? 'Answer B' : '', isCorrect: false }
         ]
       }
-      onCommit({ ...data, _questionCounter: qc, questions: [...questions, q] })
+      onChange({ ...data, _questionCounter: qc, questions: [...questions, q] })
     },
-    [data, questions, resolved.prefillNames, onCommit]
+    [data, questions, resolved.prefillNames, onChange]
   )
 
   const addQuestionFromDrop = useCallback(
@@ -65,28 +72,29 @@ export function usePlaneQuizCrud(
           { id: `${qid}-a-2`, text: resolved.prefillNames ? 'Answer B' : '', isCorrect: false }
         ]
       }
-      onCommit({ ...data, _questionCounter: qc, questions: [...questions, q] })
+      onChange({ ...data, _questionCounter: qc, questions: [...questions, q] })
     },
-    [data, questions, projectDir, resolved.prefillNames, onCommit]
+    [data, questions, projectDir, resolved.prefillNames, onChange]
   )
 
   const updateQuestion = useCallback(
     (id: string, patch: Partial<QuizQuestion>) => {
-      onCommit({ ...data, questions: questions.map((q) => (q.id === id ? { ...q, ...patch } : q)) })
+      onChange({ ...data, questions: questions.map((q) => (q.id === id ? { ...q, ...patch } : q)) })
     },
-    [data, questions, onCommit]
+    [data, questions, onChange]
   )
 
   const deleteQuestion = useCallback(
     (id: string) => {
-      onCommit({ ...data, questions: questions.filter((q) => q.id !== id) })
+      onChange({ ...data, questions: questions.filter((q) => q.id !== id) })
     },
-    [data, questions, onCommit]
+    [data, questions, onChange]
   )
 
+  // ── Answer CRUD (nested within questions) ─────────────────────────────────
   const addAnswer = useCallback(
     (qid: string) => {
-      onCommit({
+      onChange({
         ...data,
         questions: questions.map((q) => {
           if (q.id !== qid) return q
@@ -100,12 +108,12 @@ export function usePlaneQuizCrud(
         })
       })
     },
-    [data, questions, resolved.prefillNames, onCommit]
+    [data, questions, resolved.prefillNames, onChange]
   )
 
   const updateAnswer = useCallback(
     (qid: string, aid: string, patch: Partial<QuizAnswer>) => {
-      onCommit({
+      onChange({
         ...data,
         questions: questions.map((q) => {
           if (q.id !== qid) return q
@@ -117,21 +125,23 @@ export function usePlaneQuizCrud(
         })
       })
     },
-    [data, questions, onCommit]
+    [data, questions, onChange]
   )
 
   const deleteAnswer = useCallback(
     (qid: string, aid: string) => {
-      onCommit({
+      onChange({
         ...data,
         questions: questions.map((q) =>
           q.id !== qid ? q : { ...q, answers: q.answers.filter((a) => a.id !== aid) }
         )
       })
     },
-    [data, questions, onCommit]
+    [data, questions, onChange]
   )
 
+  // ── Keyboard shortcuts ──────────────────────────────────────────────────
+  // Quiz has only one unit (question), so all tiers do the same
   useEntityCreateShortcut({
     onTier1: addQuestion
   })

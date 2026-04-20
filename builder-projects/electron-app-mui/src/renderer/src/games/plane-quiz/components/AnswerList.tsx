@@ -16,7 +16,6 @@ export interface AnswerListProps {
   onAddAnswer: (qid: string) => void
   onUpdateAnswer: (qid: string, aid: string, patch: Partial<QuizAnswer>) => void
   onDeleteAnswer: (qid: string, aid: string) => void
-  onCommit?: () => void
 }
 
 /**
@@ -28,8 +27,7 @@ export function AnswerList({
   isSingle,
   onAddAnswer,
   onUpdateAnswer,
-  onDeleteAnswer,
-  onCommit
+  onDeleteAnswer
 }: AnswerListProps): React.ReactElement {
   return (
     <Box sx={{ px: 2, pb: 2, pl: '88px', display: 'flex', flexDirection: 'column', gap: 1 }}>

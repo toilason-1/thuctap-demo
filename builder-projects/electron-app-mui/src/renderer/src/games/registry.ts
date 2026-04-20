@@ -22,21 +22,13 @@ import QuizEditor from './plane-quiz/QuizEditor'
 import WhackAMoleEditor from './whack-a-mole/WhackAMoleEditor'
 import WordSearchEditor from './word-search/WordSearchEditor'
 
-export interface EditorProps {
-  appData: AnyAppData
-  projectDir: string
-  onChange: (data: AnyAppData) => void
-}
-
-export interface EditorPropsV2 {
-  initialData: AnyAppData
-  projectDir: string
-  onCommit: (data: AnyAppData) => void
-}
-
 export interface GameRegistryEntry {
   /** Editor component rendered on the ProjectPage */
-  Editor: ComponentType<EditorProps | EditorPropsV2>
+  Editor: ComponentType<{
+    appData: AnyAppData
+    projectDir: string
+    onChange: (data: AnyAppData) => void
+  }>
   /** Returns a fresh, empty appData object for new projects */
   createInitialData: () => AnyAppData
 }
