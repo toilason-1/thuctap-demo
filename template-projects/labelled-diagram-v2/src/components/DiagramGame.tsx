@@ -1,14 +1,17 @@
 import {
   DndContext,
   DragOverlay,
+  MouseSensor,
   PointerSensor,
+  rectIntersection,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   TransformComponent,
   TransformWrapper,
@@ -50,6 +53,12 @@ const TutorialModal: React.FC<{
   onNext: () => void;
   onClose: () => void;
 }> = ({ step, onPrev, onNext, onClose }) => {
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false); // Reset error when step changes
+  }, [step]);
+
   const steps = [
     {
       title: "Welcome! 👋",
@@ -90,26 +99,19 @@ const TutorialModal: React.FC<{
         onClick={(e) => e.stopPropagation()}
       >
         <div className="tutorial-media">
-          <img
-            src={`assets/images/${currentStep.img}`}
-            alt={currentStep.title}
-            className="tutorial-img"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-              const parent = e.currentTarget.parentElement;
-              if (parent) {
-                const existingPlaceholder = parent.querySelector(
-                  ".tutorial-placeholder",
-                );
-                if (!existingPlaceholder) {
-                  const placeholder = document.createElement("div");
-                  placeholder.className = "tutorial-placeholder";
-                  placeholder.innerHTML = `<span>🖼️</span><span>Tutorial Image ${step + 1}</span>`;
-                  parent.appendChild(placeholder);
-                }
-              }
-            }}
-          />
+          {!imgError ? (
+            <img
+              src={`assets/images/${currentStep.img}`}
+              alt={currentStep.title}
+              className="tutorial-img"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div className="tutorial-placeholder">
+              <span>🖼️</span>
+              <span>Tutorial Image {step + 1}</span>
+            </div>
+          )}
         </div>
         <div className="tutorial-info">
           <div className="tutorial-step-dots">
@@ -236,21 +238,14 @@ const DiagramGame: React.FC = () => {
     positionY: 0,
   });
 
-  // Debug log to help identify why the layer might be empty
-  console.log("DiagramGame Render:", {
-    hasImage: !!APP_DATA.imagePath,
-    pointsCount: APP_DATA.points.length,
-    imgSizeReady: !!imgSize,
-    transform,
-  });
-
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
+  // DnD Sensors
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(MouseSensor),
+    useSensor(TouchSensor),
   );
 
   const availableLabels = useMemo(() => {
@@ -297,8 +292,9 @@ const DiagramGame: React.FC = () => {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    setActiveLabelId(null);
     const { over, active } = event;
+    setActiveLabelId(null);
+
     if (over && over.id) {
       const targetId = over.id as string;
       const labelId = active.id as string;
@@ -339,6 +335,7 @@ const DiagramGame: React.FC = () => {
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        collisionDetection={rectIntersection}
       >
         <main className="game-main">
           <div className="canvas-area">
@@ -382,10 +379,6 @@ const DiagramGame: React.FC = () => {
                           draggable={false}
                           onLoad={(e) => {
                             const img = e.currentTarget;
-                            console.log("Image Loaded Callback:", {
-                              w: img.offsetWidth,
-                              h: img.offsetHeight,
-                            });
                             setImgSize({
                               width: img.offsetWidth,
                               height: img.offsetHeight,
@@ -617,7 +610,7 @@ const AnnotationPointWrapper: React.FC<{
     disabled: interactionMode !== "drag",
   });
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={{ ...style, pointerEvents: "auto" }}>
       <AnnotationPoint
         point={props.point}
         canDrop={canDrop || isOver}
