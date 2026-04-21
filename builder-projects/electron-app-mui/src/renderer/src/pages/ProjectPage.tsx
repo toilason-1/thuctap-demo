@@ -21,8 +21,8 @@ import { useSettingsStore } from '@renderer/stores/settingsStore'
 import { getHistoryArray } from '@renderer/utils/historyUtils'
 import { buildProjectFile, buildProjectTitle } from '@renderer/utils/projectFileUtils'
 import type { AnyAppData, ProjectFile, ProjectMeta } from '@shared/types'
-import React from 'react'
-import { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import isDeepEqual from 'react-fast-compare'
+import React, { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useBoolean, useInterval, useUnmount } from 'usehooks-ts'
 
@@ -144,7 +144,6 @@ function ProjectPageInner({
   const metaRef = useRef(meta)
   const appDataRef = useRef(appData)
   const isDirtyRef = useRef(isDirty)
-  const skipNextSyncRef = useRef(false)
 
   // Keep refs in sync - update synchronously to avoid stale closures
   useEffect(() => {
@@ -155,14 +154,11 @@ function ProjectPageInner({
 
   // Keep Editor in sync with current appData present (initial data is static)
   useEffect(() => {
-    // If the change originated from the editor, skip the sync to avoid an 'echo'
-    if (skipNextSyncRef.current) {
-      skipNextSyncRef.current = false
-      return
-    }
-
-    if (editorWrapperRef.current?.setValue) {
-      editorWrapperRef.current.setValue(appData as AnyAppData)
+    if (editorWrapperRef.current) {
+      const current = editorWrapperRef.current.getValue()
+      if (!isDeepEqual(current, appData)) {
+        editorWrapperRef.current.setValue(appData as AnyAppData)
+      }
     }
   }, [appData])
 
@@ -251,9 +247,6 @@ function ProjectPageInner({
   // ── App data commit (from editor) ─────────────────────────────────────────
   const handleEditorCommit = useCallback(
     (newData: AnyAppData) => {
-      // Mark this change as originating from the editor to avoid echoing it back
-      skipNextSyncRef.current = true
-
       // Update history state (for undo/redo)
       setPresent(newData)
 

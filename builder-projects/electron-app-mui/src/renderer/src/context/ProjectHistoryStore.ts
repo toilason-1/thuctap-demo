@@ -1,6 +1,7 @@
 import type { AnyAppData } from '@shared/types'
 import { createStore, type StoreApi } from 'zustand'
 import { travel } from 'zustand-travel'
+import isDeepEqual from 'react-fast-compare'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 export const MAX_HISTORY_LENGTH = 50
@@ -40,7 +41,9 @@ export function createHistoryStore(initialState: AnyAppData) {
         data: { ...initialState },
         setPresent: (newState: AnyAppData) => {
           set((state) => {
-            state.data = newState
+            if (!isDeepEqual(state.data, newState)) {
+              state.data = newState
+            }
           })
         }
       }),
