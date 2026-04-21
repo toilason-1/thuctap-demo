@@ -1,5 +1,4 @@
 import {
-  defaultDropAnimationSideEffects,
   DndContext,
   DragOverlay,
   MouseSensor,
@@ -14,10 +13,9 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import React, {
   useCallback,
-  useEffect,
   useMemo,
   useRef,
-  useState,
+  useState
 } from "react";
 import {
   TransformComponent,
@@ -61,9 +59,12 @@ const TutorialModal: React.FC<{
   onClose: () => void;
 }> = ({ step, onPrev, onNext, onClose }) => {
   const [imgError, setImgError] = useState(false);
-  useEffect(() => {
+  const [prevStep, setPrevStep] = useState(step);
+
+  if (step !== prevStep) {
+    setPrevStep(step);
     setImgError(false);
-  }, [step]);
+  }
 
   const steps = [
     {
@@ -172,11 +173,7 @@ const DraggableLabel: React.FC<{
       {...listeners}
       {...attributes}
       className={`label-item ${isActive ? "active" : ""} ${isPinned ? "pinned" : ""} ${isDragging ? "dragging" : ""}`}
-      onClick={(e) => {
-        // Prevent click if we're in drag mode and just dropped or something
-        // But for selection mode, we need this
-        onClick();
-      }}
+      onClick={onClick}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
@@ -261,6 +258,7 @@ const DiagramGame: React.FC = () => {
   });
 
   const [activeLabelId, setActiveLabelId] = useState<string | null>(null);
+  const [lastDropSuccessful, setLastDropSuccessful] = useState(false);
   const [imgSize, setImgSize] = useState<{
     width: number;
     height: number;
@@ -286,9 +284,8 @@ const DiagramGame: React.FC = () => {
 
     if (gameState.interactionMode === "click" && activeLabelId) {
       const activeItem = items.find((p) => p.id === activeLabelId);
-      if (activeItem) {
+      if (activeItem)
         items = [activeItem, ...items.filter((p) => p.id !== activeLabelId)];
-      }
     }
     return items;
   }, [gameState.placedPoints, activeLabelId, gameState.interactionMode]);
@@ -319,7 +316,6 @@ const DiagramGame: React.FC = () => {
         }
       }
     } else {
-      // Drag Mode: clicking a target with a label just removes it and sends back to rack
       const existingLabelId = gameState.placedPoints[pointId];
       if (existingLabelId) {
         setGameState((prev) => {
@@ -327,7 +323,6 @@ const DiagramGame: React.FC = () => {
           delete newPlaced[pointId];
           return { ...prev, placedPoints: newPlaced };
         });
-        // Important: DO NOT setActiveLabelId in Drag mode
       }
     }
   };
@@ -335,15 +330,16 @@ const DiagramGame: React.FC = () => {
   const handleDragStart = (event: DragStartEvent) => {
     if (gameState.isReviewMode || gameState.interactionMode !== "drag") return;
     setActiveLabelId(event.active.id as string);
+    setLastDropSuccessful(false);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { over, active } = event;
-    setActiveLabelId(null);
 
     if (over && over.id) {
       const targetId = over.id as string;
       const labelId = active.id as string;
+      setLastDropSuccessful(true);
       setGameState((prev) => {
         const newPlaced = { ...prev.placedPoints };
         Object.keys(newPlaced).forEach((tid) => {
@@ -353,13 +349,16 @@ const DiagramGame: React.FC = () => {
         return { ...prev, placedPoints: newPlaced };
       });
     }
+    setActiveLabelId(null);
   };
 
-  const pointingModifier = useCallback(({ transform }: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const strictlyBottomRightModifier = useCallback(({ transform }: any) => {
+    // Increased offsets to ensure the label is always past the cursor
     return {
       ...transform,
-      x: transform.x + 15,
-      y: transform.y + 35,
+      x: transform.x + 35,
+      y: transform.y + 65,
     };
   }, []);
 
@@ -467,10 +466,11 @@ const DiagramGame: React.FC = () => {
                       );
                       const isCorrect =
                         gameState.isReviewMode && placedLabelId === point.id;
-                      const isWrong =
+                      const isWrong = Boolean(
                         gameState.isReviewMode &&
                         placedLabelId &&
-                        placedLabelId !== point.id;
+                        placedLabelId !== point.id,
+                      );
 
                       const x =
                         (point.xPercent / 100) *
@@ -516,7 +516,7 @@ const DiagramGame: React.FC = () => {
                     interactionMode:
                       prev.interactionMode === "click" ? "drag" : "click",
                   }));
-                  setActiveLabelId(null); // Clear selection when switching modes
+                  setActiveLabelId(null);
                 }}
               >
                 {gameState.interactionMode === "click" ? "🖱️" : "🖐️"}
@@ -554,9 +554,9 @@ const DiagramGame: React.FC = () => {
               <button
                 className={`btn-submit ${gameState.isReviewMode ? "active" : ""}`}
                 onClick={() => {
-                  if (gameState.isReviewMode) {
+                  if (gameState.isReviewMode)
                     setGameState((prev) => ({ ...prev, isReviewMode: false }));
-                  } else {
+                  else {
                     const correctCount = Object.keys(
                       gameState.placedPoints,
                     ).filter(
@@ -579,21 +579,18 @@ const DiagramGame: React.FC = () => {
         </main>
 
         <DragOverlay
-          modifiers={[pointingModifier]}
-          dropAnimation={{
-            duration: 250,
-            easing: "cubic-bezier(0.18, 0.89, 0.32, 1.28)",
-            sideEffects: defaultDropAnimationSideEffects({
-              styles: {
-                active: {
-                  opacity: "0.4",
-                },
-              },
-            }),
-          }}
+          modifiers={[strictlyBottomRightModifier]}
+          dropAnimation={
+            lastDropSuccessful
+              ? null
+              : {
+                  duration: 250,
+                  easing: "cubic-bezier(0.18, 0.89, 0.32, 1.28)",
+                }
+          }
         >
           {activeLabelId && gameState.interactionMode === "drag" ? (
-            <div className="drag-overlay-label">
+            <div className="drag-overlay-label" style={{ opacity: 0.9 }}>
               {APP_DATA.points.find((p) => p.id === activeLabelId)?.text}
             </div>
           ) : null}
