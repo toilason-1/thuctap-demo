@@ -1,17 +1,17 @@
 import {
   DndContext,
   DragOverlay,
-  MouseSensor,
   PointerSensor,
-  rectIntersection,
+  MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
+  rectIntersection,
 } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import {
   TransformComponent,
   TransformWrapper,
@@ -56,7 +56,7 @@ const TutorialModal: React.FC<{
   const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
-    setImgError(false); // Reset error when step changes
+    setImgError(false);
   }, [step]);
 
   const steps = [
@@ -181,25 +181,17 @@ const AnnotationPoint: React.FC<{
   placedLabelText?: string;
   canDrop: boolean;
   onClick: () => void;
-  style: React.CSSProperties;
-}> = ({
-  isCorrect,
-  isWrong,
-  hasLabel,
-  placedLabelText,
-  canDrop,
-  onClick,
-  style,
-}) => (
+  // Style is now handled by the Wrapper to ensure dnd-kit can see the rect
+}> = ({ isCorrect, isWrong, hasLabel, placedLabelText, canDrop, onClick }) => (
   <div
     className={`target-point ${canDrop ? "can-drop" : ""} ${hasLabel ? "has-label" : ""} ${isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}`}
-    style={{ ...style, pointerEvents: "auto" }}
     onClick={(e) => {
       e.stopPropagation();
       onClick();
     }}
+    style={{ position: 'relative', top: 0, left: 0, transform: 'none', width: '100%', height: '100%' }}
   >
-    <div className="target-marker" />
+    <div className="target-marker" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
     <AnimatePresence>
       {placedLabelText && (
         <motion.div
@@ -228,24 +220,18 @@ const DiagramGame: React.FC = () => {
   });
 
   const [activeLabelId, setActiveLabelId] = useState<string | null>(null);
-  const [imgSize, setImgSize] = useState<{
-    width: number;
-    height: number;
-  } | null>(APP_DATA.imagePath ? null : { width: 800, height: 500 });
-  const [transform, setTransform] = useState({
-    scale: 1,
-    positionX: 0,
-    positionY: 0,
-  });
+  const [imgSize, setImgSize] = useState<{ width: number; height: number } | null>(
+    APP_DATA.imagePath ? null : { width: 800, height: 500 }
+  );
+  const [transform, setTransform] = useState({ scale: 1, positionX: 0, positionY: 0 });
 
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // DnD Sensors
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(MouseSensor),
-    useSensor(TouchSensor),
+    useSensor(TouchSensor)
   );
 
   const availableLabels = useMemo(() => {
@@ -294,7 +280,7 @@ const DiagramGame: React.FC = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { over, active } = event;
     setActiveLabelId(null);
-
+    
     if (over && over.id) {
       const targetId = over.id as string;
       const labelId = active.id as string;
@@ -314,26 +300,13 @@ const DiagramGame: React.FC = () => {
       <GameHeader
         progress={Object.keys(gameState.placedPoints).length}
         total={APP_DATA.points.length}
-        onHelp={() =>
-          setGameState((prev) => ({
-            ...prev,
-            isTutorialOpen: true,
-            tutorialStep: 0,
-          }))
-        }
-        onReset={() =>
-          setGameState((prev) => ({
-            ...prev,
-            placedPoints: {},
-            isReviewMode: false,
-            showCongratulation: false,
-          }))
-        }
+        onHelp={() => setGameState(prev => ({ ...prev, isTutorialOpen: true, tutorialStep: 0 }))}
+        onReset={() => setGameState(prev => ({ ...prev, placedPoints: {}, isReviewMode: false, showCongratulation: false }))}
       />
 
-      <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
+      <DndContext 
+        sensors={sensors} 
+        onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd}
         collisionDetection={rectIntersection}
       >
@@ -348,27 +321,17 @@ const DiagramGame: React.FC = () => {
               doubleClick={{ disabled: true }}
               onTransformed={(ref) => setTransform({ ...ref.state })}
               onInit={(ref) => setTransform({ ...ref.state })}
-              panning={{
-                disabled:
-                  gameState.interactionMode === "drag" && !!activeLabelId,
-              }}
+              panning={{ disabled: gameState.interactionMode === "drag" && !!activeLabelId }}
             >
-              {({ zoomIn, zoomOut, resetTransform }) => (
+              {({ resetTransform }) => (
                 <div className="diagram-stage">
                   <div className="canvas-controls">
-                    <button onClick={() => zoomIn()}>+</button>
-                    <button onClick={() => zoomOut()}>-</button>
-                    <button
-                      className="btn-reset-view"
-                      onClick={() => resetTransform()}
-                    >
-                      Reset View
-                    </button>
+                    <button onClick={() => transformRef.current?.zoomIn()}>+</button>
+                    <button onClick={() => transformRef.current?.zoomOut()}>-</button>
+                    <button className="btn-reset-view" onClick={() => resetTransform()}>Reset View</button>
                   </div>
 
-                  <TransformComponent
-                    wrapperStyle={{ width: "100%", height: "100%" }}
-                  >
+                  <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
                     <div className="diagram-wrapper">
                       {APP_DATA.imagePath ? (
                         <img
@@ -379,69 +342,55 @@ const DiagramGame: React.FC = () => {
                           draggable={false}
                           onLoad={(e) => {
                             const img = e.currentTarget;
-                            setImgSize({
-                              width: img.offsetWidth,
-                              height: img.offsetHeight,
-                            });
+                            setImgSize({ width: img.offsetWidth, height: img.offsetHeight });
                             if (transformRef.current) {
-                              setTransform({
-                                ...transformRef.current.instance.transformState,
-                              });
+                              setTransform({ ...transformRef.current.instance.transformState });
                             }
                           }}
                         />
                       ) : (
                         <div className="image-placeholder">
                           <span className="placeholder-icon">🖼️</span>
-                          <span className="placeholder-text">
-                            Select a diagram in the editor to begin
-                          </span>
+                          <span className="placeholder-text">Select a diagram in the editor to begin</span>
                         </div>
                       )}
                     </div>
                   </TransformComponent>
 
                   <div className="annotation-layer">
-                    {imgSize &&
-                      APP_DATA.points.map((point) => {
-                        const placedLabelId = gameState.placedPoints[point.id];
-                        const labelItem = APP_DATA.points.find(
-                          (p) => p.id === placedLabelId,
-                        );
-                        const isCorrect =
-                          gameState.isReviewMode && placedLabelId === point.id;
-                        const isWrong =
-                          gameState.isReviewMode &&
-                          placedLabelId &&
-                          placedLabelId !== point.id;
+                    {imgSize && APP_DATA.points.map((point) => {
+                      const placedLabelId = gameState.placedPoints[point.id];
+                      const labelItem = APP_DATA.points.find((p) => p.id === placedLabelId);
+                      const isCorrect = gameState.isReviewMode && placedLabelId === point.id;
+                      const isWrong = gameState.isReviewMode && placedLabelId && placedLabelId !== point.id;
 
-                        const x =
-                          (point.xPercent / 100) *
-                            imgSize.width *
-                            transform.scale +
-                          transform.positionX;
-                        const y =
-                          (point.yPercent / 100) *
-                            imgSize.height *
-                            transform.scale +
-                          transform.positionY;
+                      const x = (point.xPercent / 100) * imgSize.width * transform.scale + transform.positionX;
+                      const y = (point.yPercent / 100) * imgSize.height * transform.scale + transform.positionY;
 
-                        return (
-                          <AnnotationPointWrapper
-                            key={point.id}
-                            id={point.id}
-                            point={point}
-                            isCorrect={isCorrect}
-                            isWrong={isWrong}
-                            hasLabel={!!placedLabelId}
-                            placedLabelText={labelItem?.text}
-                            canDrop={!!activeLabelId}
-                            onClick={() => handleTargetClick(point.id)}
-                            interactionMode={gameState.interactionMode}
-                            style={{ left: x, top: y, position: "absolute" }}
-                          />
-                        );
-                      })}
+                      return (
+                        <AnnotationPointWrapper
+                          key={point.id}
+                          id={point.id}
+                          point={point}
+                          isCorrect={isCorrect}
+                          isWrong={isWrong}
+                          hasLabel={!!placedLabelId}
+                          placedLabelText={labelItem?.text}
+                          canDrop={!!activeLabelId}
+                          onClick={() => handleTargetClick(point.id)}
+                          interactionMode={gameState.interactionMode}
+                          style={{ 
+                            left: x, 
+                            top: y, 
+                            position: "absolute",
+                            width: 60, // Give it an actual detectable size
+                            height: 60,
+                            transform: 'translate(-50%, -50%)',
+                            pointerEvents: 'auto'
+                          }}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -453,14 +402,7 @@ const DiagramGame: React.FC = () => {
               <h2 className="rack-title">Labels</h2>
               <button
                 className="mode-toggle-icon"
-                onClick={() =>
-                  setGameState((prev) => ({
-                    ...prev,
-                    interactionMode:
-                      prev.interactionMode === "click" ? "drag" : "click",
-                  }))
-                }
-                title={`Switch to ${gameState.interactionMode === "click" ? "Drag" : "Click"} Mode`}
+                onClick={() => setGameState(prev => ({ ...prev, interactionMode: prev.interactionMode === "click" ? "drag" : "click" }))}
               >
                 {gameState.interactionMode === "click" ? "🖱️" : "🖐️"}
               </button>
@@ -473,24 +415,17 @@ const DiagramGame: React.FC = () => {
                     key={label.id}
                     label={label}
                     isActive={activeLabelId === label.id}
-                    isPinned={
-                      gameState.interactionMode === "click" &&
-                      activeLabelId === label.id
-                    }
+                    isPinned={gameState.interactionMode === "click" && activeLabelId === label.id}
                     disabled={gameState.isReviewMode}
                     onClick={() => {
                       if (gameState.interactionMode === "click") {
-                        setActiveLabelId((prev) =>
-                          prev === label.id ? null : label.id,
-                        );
+                        setActiveLabelId(prev => prev === label.id ? null : label.id);
                       }
                     }}
                   />
                 ))}
               </AnimatePresence>
-              {availableLabels.length === 0 && (
-                <div className="no-labels">Challenge complete! 🎉</div>
-              )}
+              {availableLabels.length === 0 && <div className="no-labels">Challenge complete! 🎉</div>}
             </div>
 
             <div className="rack-footer">
@@ -498,19 +433,10 @@ const DiagramGame: React.FC = () => {
                 className={`btn-submit ${gameState.isReviewMode ? "active" : ""}`}
                 onClick={() => {
                   if (gameState.isReviewMode) {
-                    setGameState((prev) => ({ ...prev, isReviewMode: false }));
+                    setGameState(prev => ({ ...prev, isReviewMode: false }));
                   } else {
-                    const correctCount = Object.keys(
-                      gameState.placedPoints,
-                    ).filter(
-                      (tid) => gameState.placedPoints[tid] === tid,
-                    ).length;
-                    setGameState((prev) => ({
-                      ...prev,
-                      isReviewMode: true,
-                      showCongratulation:
-                        correctCount === APP_DATA.points.length,
-                    }));
+                    const correctCount = Object.keys(gameState.placedPoints).filter(tid => gameState.placedPoints[tid] === tid).length;
+                    setGameState(prev => ({ ...prev, isReviewMode: true, showCongratulation: correctCount === APP_DATA.points.length }));
                   }
                 }}
                 disabled={Object.keys(gameState.placedPoints).length === 0}
@@ -522,15 +448,10 @@ const DiagramGame: React.FC = () => {
         </main>
       </DndContext>
 
-      <DragOverlay
-        dropAnimation={{
-          duration: 300,
-          easing: "cubic-bezier(0.18, 0.89, 0.32, 1.28)",
-        }}
-      >
+      <DragOverlay dropAnimation={{ duration: 300, easing: "cubic-bezier(0.18, 0.89, 0.32, 1.28)" }}>
         {activeLabelId && gameState.interactionMode === "drag" ? (
           <div className="drag-overlay-label">
-            {APP_DATA.points.find((p) => p.id === activeLabelId)?.text}
+            {APP_DATA.points.find(p => p.id === activeLabelId)?.text}
           </div>
         ) : null}
       </DragOverlay>
@@ -539,48 +460,19 @@ const DiagramGame: React.FC = () => {
         {gameState.isTutorialOpen && (
           <TutorialModal
             step={gameState.tutorialStep}
-            onPrev={() =>
-              setGameState((prev) => ({
-                ...prev,
-                tutorialStep: prev.tutorialStep - 1,
-              }))
-            }
-            onNext={() =>
-              setGameState((prev) => ({
-                ...prev,
-                tutorialStep: prev.tutorialStep + 1,
-              }))
-            }
-            onClose={() =>
-              setGameState((prev) => ({ ...prev, isTutorialOpen: false }))
-            }
+            onPrev={() => setGameState(prev => ({ ...prev, tutorialStep: prev.tutorialStep - 1 }))}
+            onNext={() => setGameState(prev => ({ ...prev, tutorialStep: prev.tutorialStep + 1 }))}
+            onClose={() => setGameState(prev => ({ ...prev, isTutorialOpen: false }))}
           />
         )}
-
+        
         {gameState.showCongratulation && (
-          <div
-            className="popup-overlay"
-            onClick={() =>
-              setGameState((p) => ({ ...p, showCongratulation: false }))
-            }
-          >
-            <motion.div
-              className="popup-content"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div className="popup-overlay" onClick={() => setGameState(p => ({ ...p, showCongratulation: false }))}>
+            <motion.div className="popup-content" initial={{ scale: 0.8 }} animate={{ scale: 1 }} onClick={e => e.stopPropagation()}>
               <div className="popup-icon">🏆</div>
               <h2>Perfect Score!</h2>
               <p>You have successfully labelled all parts of the diagram.</p>
-              <button
-                className="btn-popup"
-                onClick={() =>
-                  setGameState((p) => ({ ...p, showCongratulation: false }))
-                }
-              >
-                Awesome!
-              </button>
+              <button className="btn-popup" onClick={() => setGameState(p => ({ ...p, showCongratulation: false }))}>Awesome!</button>
             </motion.div>
           </div>
         )}
@@ -591,7 +483,7 @@ const DiagramGame: React.FC = () => {
 
 // --- Specialized Wrappers ---
 
-import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useDroppable, useDraggable } from "@dnd-kit/core";
 
 const AnnotationPointWrapper: React.FC<{
   id: string;
@@ -605,18 +497,10 @@ const AnnotationPointWrapper: React.FC<{
   interactionMode: "click" | "drag";
   style: React.CSSProperties;
 }> = ({ id, interactionMode, style, canDrop, ...props }) => {
-  const { setNodeRef, isOver } = useDroppable({
-    id,
-    disabled: interactionMode !== "drag",
-  });
+  const { setNodeRef, isOver } = useDroppable({ id, disabled: interactionMode !== "drag" });
   return (
-    <div ref={setNodeRef} style={{ ...style, pointerEvents: "auto" }}>
-      <AnnotationPoint
-        point={props.point}
-        canDrop={canDrop || isOver}
-        style={{}}
-        {...props}
-      />
+    <div ref={setNodeRef} style={style}>
+      <AnnotationPoint point={props.point} canDrop={canDrop || isOver} onClick={props.onClick} {...props} />
     </div>
   );
 };
