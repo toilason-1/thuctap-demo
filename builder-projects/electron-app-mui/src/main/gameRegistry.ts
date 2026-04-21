@@ -196,7 +196,7 @@ export const GAME_DATA_TRANSFORMS: Record<string, DataTransform> = {
     //   points: { id, text, xPercent, yPercent }[]
     // }
     const data = appData as LabelledDiagramAppData
- 
+
     return omitInternalKeys({
       imagePath: data.imagePath,
       points: (data.points ?? []).map(({ id, text, xPercent, yPercent }) => ({

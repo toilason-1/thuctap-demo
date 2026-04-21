@@ -171,12 +171,21 @@ export const GAME_REGISTRY: GameRegistry = {
   },
 
   'labelled-diagram-v2': {
-    Editor: LabelledDiagramEditorV2 as GameRegistryEntry['Editor'],
+    Editor: wrapEditor(LabelledDiagramEditorV2),
     createInitialData: () => ({
       imagePath: null,
       points: [],
       _pointCounter: 0
-    })
+    }),
+    normalize: (d) => {
+      const l = d as GameAppDataMap['labelled-diagram-v2']
+      return {
+        ...l,
+        imagePath: l.imagePath ?? null,
+        points: l.points ?? [],
+        _pointCounter: l._pointCounter ?? 0
+      }
+    }
   },
 
   'find-the-treasure': {
