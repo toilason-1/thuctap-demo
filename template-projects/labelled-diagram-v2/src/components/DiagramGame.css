@@ -349,12 +349,19 @@ html,
   gap: 14px;
 }
 
+.labels-rack.mode-click .label-item {
+  cursor: pointer;
+}
+
+.labels-rack.mode-drag .label-item {
+  cursor: grab;
+}
+
 .label-item {
   background: rgba(255, 255, 255, 0.05);
   padding: 18px 24px;
   border-radius: 18px;
   font-weight: 700;
-  cursor: grab;
   border: 1px solid rgba(255, 255, 255, 0.05);
   color: var(--text-main);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);

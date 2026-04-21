@@ -148,6 +148,7 @@ const TutorialModal: React.FC<{
 // --- Specialized Internal Components ---
 
 import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useGameSounds } from "../hooks/useGameSounds";
 
 const DraggableLabel: React.FC<{
   label: LabelledDiagramPoint;
@@ -243,6 +244,15 @@ const DroppablePoint: React.FC<{
 // --- Main Game Component ---
 
 const DiagramGame: React.FC = () => {
+  const {
+    playSelect,
+    playPlaceSuccess,
+    playPlaceFail,
+    playCheckCorrect,
+    playCheckWrong,
+    playCongrats,
+  } = useGameSounds();
+
   const [gameState, setGameState] = useState<GameState>({
     placedPoints: {},
     isReviewMode: false,
@@ -299,6 +309,7 @@ const DiagramGame: React.FC = () => {
           return { ...prev, placedPoints: newPlaced };
         });
         setActiveLabelId(null);
+        playPlaceSuccess();
       } else {
         const existingLabelId = gameState.placedPoints[pointId];
         if (existingLabelId) {
@@ -308,6 +319,7 @@ const DiagramGame: React.FC = () => {
             delete newPlaced[pointId];
             return { ...prev, placedPoints: newPlaced };
           });
+          playSelect();
         }
       }
     } else {
@@ -318,6 +330,7 @@ const DiagramGame: React.FC = () => {
           delete newPlaced[pointId];
           return { ...prev, placedPoints: newPlaced };
         });
+        playSelect();
       }
     }
   };
@@ -326,6 +339,7 @@ const DiagramGame: React.FC = () => {
     if (gameState.isReviewMode || gameState.interactionMode !== "drag") return;
     setActiveLabelId(event.active.id as string);
     setLastDropSuccessful(false);
+    playSelect();
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -343,6 +357,9 @@ const DiagramGame: React.FC = () => {
         newPlaced[targetId] = labelId;
         return { ...prev, placedPoints: newPlaced };
       });
+      playPlaceSuccess();
+    } else {
+      playPlaceFail();
     }
     setActiveLabelId(null);
   };
@@ -377,6 +394,7 @@ const DiagramGame: React.FC = () => {
             showCongratulation: false,
           }));
           setActiveLabelId(null);
+          playSelect();
         }}
       />
 
@@ -500,7 +518,7 @@ const DiagramGame: React.FC = () => {
             </TransformWrapper>
           </div>
 
-          <aside className="labels-rack">
+          <aside className={`labels-rack mode-${gameState.interactionMode}`}>
             <div className="rack-header">
               <h2 className="rack-title">Labels</h2>
               <button
@@ -512,6 +530,7 @@ const DiagramGame: React.FC = () => {
                       prev.interactionMode === "click" ? "drag" : "click",
                   }));
                   setActiveLabelId(null);
+                  playSelect();
                 }}
               >
                 {gameState.interactionMode === "click" ? "🖱️" : "🖐️"}
@@ -535,6 +554,7 @@ const DiagramGame: React.FC = () => {
                         setActiveLabelId((prev) =>
                           prev === label.id ? null : label.id,
                         );
+                        playSelect();
                       }
                     }}
                   />
@@ -549,20 +569,27 @@ const DiagramGame: React.FC = () => {
               <button
                 className={`btn-submit ${gameState.isReviewMode ? "active" : ""}`}
                 onClick={() => {
-                  if (gameState.isReviewMode)
+                  if (gameState.isReviewMode) {
                     setGameState((prev) => ({ ...prev, isReviewMode: false }));
-                  else {
+                    playSelect();
+                  } else {
                     const correctCount = Object.keys(
                       gameState.placedPoints,
                     ).filter(
                       (tid) => gameState.placedPoints[tid] === tid,
                     ).length;
+                    const isPerfect = correctCount === APP_DATA.points.length;
                     setGameState((prev) => ({
                       ...prev,
                       isReviewMode: true,
-                      showCongratulation:
-                        correctCount === APP_DATA.points.length,
+                      showCongratulation: isPerfect,
                     }));
+                    if (isPerfect) {
+                      playCheckCorrect();
+                      playCongrats();
+                    } else {
+                      playCheckWrong();
+                    }
                   }
                 }}
                 disabled={Object.keys(gameState.placedPoints).length === 0}
