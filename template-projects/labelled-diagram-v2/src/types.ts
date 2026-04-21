@@ -16,4 +16,6 @@ export interface GameState {
   isReviewMode: boolean;
   showCongratulation: boolean;
   interactionMode: "click" | "drag";
+  isTutorialOpen: boolean;
+  tutorialStep: number;
 }

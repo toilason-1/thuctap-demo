@@ -30,12 +30,12 @@ const GameHeader: React.FC<{
     <div className="game-title-group">
       <h1 className="game-title">Labelled Diagram</h1>
       <div className="stats-badge">
-        Completed: {progress} / {total}
+        Progress: {progress} / {total}
       </div>
     </div>
     <div className="header-controls">
       <button className="btn-header help" onClick={onHelp}>
-        <span>❓</span> Help
+        <span>💡</span> Tutorial
       </button>
       <button className="btn-header reset" onClick={onReset}>
         <span>🔄</span> Reset
@@ -43,6 +43,128 @@ const GameHeader: React.FC<{
     </div>
   </header>
 );
+
+const TutorialModal: React.FC<{
+  step: number;
+  onPrev: () => void;
+  onNext: () => void;
+  onClose: () => void;
+}> = ({ step, onPrev, onNext, onClose }) => {
+  const steps = [
+    {
+      title: "Welcome! 👋",
+      desc: "Let's learn how to label this diagram correctly. It's easy, follow the steps!",
+      img: "tutorial-1.png",
+    },
+    {
+      title: "Move and Zoom 🔍",
+      desc: "Use your mouse wheel to zoom in or out. Hold the LEFT button and drag to move the map around.",
+      img: "tutorial-2.png",
+    },
+    {
+      title: "Interactive Modes 🖱️",
+      desc: "Click the icon in the sidebar to switch between 'Click' and 'Drag' modes.",
+      img: "tutorial-3.png",
+    },
+    {
+      title: "Labelling 🏷️",
+      desc: "In Drag mode, pull a label onto a target circle. In Click mode, select a label first, then click a target.",
+      img: "tutorial-4.png",
+    },
+    {
+      title: "Check Results ✅",
+      desc: "Press 'Check Results' at the bottom when you're done. Green means correct, Red means try again!",
+      img: "tutorial-5.png",
+    },
+  ];
+
+  const currentStep = steps[step];
+
+  return (
+    <div className="tutorial-overlay" onClick={onClose}>
+      <motion.div
+        className="tutorial-content"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="tutorial-media">
+          <img
+            src={`assets/images/${currentStep.img}`}
+            alt={currentStep.title}
+            className="tutorial-img"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              const parent = e.currentTarget.parentElement;
+              if (parent) {
+                const placeholder = document.createElement("div");
+                placeholder.className = "tutorial-placeholder";
+                placeholder.innerHTML = `<span>🖼️</span><span>Tutorial Image ${step + 1}</span>`;
+                parent.appendChild(placeholder);
+              }
+            }}
+          />
+        </div>
+        <div className="tutorial-info">
+          <div className="tutorial-step-dots">
+            {steps.map((_, i) => (
+              <div key={i} className={`dot ${i === step ? "active" : ""}`} />
+            ))}
+          </div>
+          <h2 className="tutorial-title">{currentStep.title}</h2>
+          <p className="tutorial-desc">{currentStep.desc}</p>
+          <div className="tutorial-nav">
+            {step > 0 ? (
+              <button className="btn-nav btn-prev" onClick={onPrev}>
+                Previous
+              </button>
+            ) : (
+              <div style={{ flex: 1 }} />
+            )}
+            {step < steps.length - 1 ? (
+              <button className="btn-nav btn-next" onClick={onNext}>
+                Next
+              </button>
+            ) : (
+              <button className="btn-nav btn-done" onClick={onClose}>
+                Start Playing
+              </button>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+const LabelItem: React.FC<{
+  label: LabelledDiagramPoint;
+  isActive: boolean;
+  isPinned: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}> = ({ label, isActive, isPinned, disabled, onClick }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: label.id,
+    disabled: disabled,
+  });
+
+  return (
+    <motion.div
+      ref={setNodeRef}
+      layout
+      {...listeners}
+      {...attributes}
+      className={`label-item ${isActive ? "active" : ""} ${isPinned ? "pinned" : ""} ${isDragging ? "dragging" : ""}`}
+      onClick={onClick}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      {label.text}
+    </motion.div>
+  );
+};
 
 const AnnotationPoint: React.FC<{
   point: LabelledDiagramPoint;
@@ -52,7 +174,6 @@ const AnnotationPoint: React.FC<{
   placedLabelText?: string;
   canDrop: boolean;
   onClick: () => void;
-  // Position passed from parent
   style: React.CSSProperties;
 }> = ({
   isCorrect,
@@ -62,32 +183,30 @@ const AnnotationPoint: React.FC<{
   canDrop,
   onClick,
   style,
-}) => {
-  return (
-    <div
-      className={`target-point ${canDrop ? "can-drop" : ""} ${hasLabel ? "has-label" : ""} ${isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}`}
-      style={style}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-    >
-      <div className="target-marker" />
-      <AnimatePresence>
-        {placedLabelText && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0, y: 10, x: "-50%" }}
-            animate={{ scale: 1, opacity: 1, y: 0, x: "-50%" }}
-            exit={{ scale: 0, opacity: 0, y: 10, x: "-50%" }}
-            className="placed-label"
-          >
-            {placedLabelText}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
+}) => (
+  <div
+    className={`target-point ${canDrop ? "can-drop" : ""} ${hasLabel ? "has-label" : ""} ${isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}`}
+    style={{ ...style, pointerEvents: "auto" }}
+    onClick={(e) => {
+      e.stopPropagation();
+      onClick();
+    }}
+  >
+    <div className="target-marker" />
+    <AnimatePresence>
+      {placedLabelText && (
+        <motion.div
+          initial={{ scale: 0, opacity: 0, y: 10, x: "-50%" }}
+          animate={{ scale: 1, opacity: 1, y: 0, x: "-50%" }}
+          exit={{ scale: 0, opacity: 0, y: 10, x: "-50%" }}
+          className="placed-label"
+        >
+          {placedLabelText}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
 
 // --- Main Game Component ---
 
@@ -97,6 +216,8 @@ const DiagramGame: React.FC = () => {
     isReviewMode: false,
     showCongratulation: false,
     interactionMode: "click",
+    isTutorialOpen: false,
+    tutorialStep: 0,
   });
 
   const [activeLabelId, setActiveLabelId] = useState<string | null>(null);
@@ -113,7 +234,6 @@ const DiagramGame: React.FC = () => {
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // DnD Sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -135,7 +255,6 @@ const DiagramGame: React.FC = () => {
 
   const handleTargetClick = (pointId: string) => {
     if (gameState.isReviewMode) return;
-
     if (activeLabelId) {
       setGameState((prev) => {
         const newPlaced = { ...prev.placedPoints };
@@ -159,36 +278,6 @@ const DiagramGame: React.FC = () => {
     }
   };
 
-  const checkResults = () => {
-    if (gameState.isReviewMode) {
-      setGameState((prev) => ({ ...prev, isReviewMode: false }));
-      return;
-    }
-
-    const correctCount = Object.keys(gameState.placedPoints).filter(
-      (targetId) => gameState.placedPoints[targetId] === targetId,
-    ).length;
-
-    const isAllCorrect = correctCount === APP_DATA.points.length;
-
-    setGameState((prev) => ({
-      ...prev,
-      isReviewMode: true,
-      showCongratulation: isAllCorrect,
-    }));
-  };
-
-  const resetGame = () => {
-    setGameState((prev) => ({
-      ...prev,
-      placedPoints: {},
-      isReviewMode: false,
-      showCongratulation: false,
-    }));
-    setActiveLabelId(null);
-  };
-
-  // DnD Handlers
   const handleDragStart = (event: DragStartEvent) => {
     if (gameState.isReviewMode || gameState.interactionMode !== "drag") return;
     setActiveLabelId(event.active.id as string);
@@ -200,7 +289,6 @@ const DiagramGame: React.FC = () => {
     if (over && over.id) {
       const targetId = over.id as string;
       const labelId = active.id as string;
-
       setGameState((prev) => {
         const newPlaced = { ...prev.placedPoints };
         Object.keys(newPlaced).forEach((tid) => {
@@ -218,13 +306,20 @@ const DiagramGame: React.FC = () => {
         progress={Object.keys(gameState.placedPoints).length}
         total={APP_DATA.points.length}
         onHelp={() =>
-          alert(
-            gameState.interactionMode === "click"
-              ? "Click a label, then click its target point. You can still zoom and pan!"
-              : "Drag labels from the rack onto the target points.",
-          )
+          setGameState((prev) => ({
+            ...prev,
+            isTutorialOpen: true,
+            tutorialStep: 0,
+          }))
         }
-        onReset={resetGame}
+        onReset={() =>
+          setGameState((prev) => ({
+            ...prev,
+            placedPoints: {},
+            isReviewMode: false,
+            showCongratulation: false,
+          }))
+        }
       />
 
       <DndContext
@@ -237,8 +332,8 @@ const DiagramGame: React.FC = () => {
             <TransformWrapper
               ref={transformRef}
               initialScale={1}
-              minScale={0.5}
-              maxScale={4}
+              minScale={0.3}
+              maxScale={5}
               centerOnInit
               doubleClick={{ disabled: true }}
               onTransformed={(ref) => setTransform({ ...ref.state })}
@@ -278,18 +373,23 @@ const DiagramGame: React.FC = () => {
                               width: img.offsetWidth,
                               height: img.offsetHeight,
                             });
+                            // Force initial transform sync after load
+                            if (transformRef.current) {
+                              setTransform({
+                                ...transformRef.current.instance.transformState,
+                              });
+                            }
                           }}
                         />
                       ) : (
                         <div className="image-placeholder">
                           <span className="placeholder-icon">🖼️</span>
-                          <span>No Image Selected</span>
+                          <span>Select a diagram in the editor to begin</span>
                         </div>
                       )}
                     </div>
                   </TransformComponent>
 
-                  {/* SEPARATED ANNOTATION LAYER - Renders on top of TransformComponent */}
                   <div className="annotation-layer">
                     {imgSize &&
                       APP_DATA.points.map((point) => {
@@ -299,13 +399,11 @@ const DiagramGame: React.FC = () => {
                         );
                         const isCorrect =
                           gameState.isReviewMode && placedLabelId === point.id;
-                        const isWrong = Boolean(
+                        const isWrong =
                           gameState.isReviewMode &&
                           placedLabelId &&
-                          placedLabelId !== point.id,
-                        );
+                          placedLabelId !== point.id;
 
-                        // CALCULATE CONSTANT-SIZE POSITION
                         const x =
                           (point.xPercent / 100) *
                             imgSize.width *
@@ -320,19 +418,16 @@ const DiagramGame: React.FC = () => {
                         return (
                           <AnnotationPointWrapper
                             key={point.id}
+                            id={point.id}
                             point={point}
                             isCorrect={isCorrect}
-                            isWrong={isWrong}
+                            isWrong={Boolean(isWrong)}
                             hasLabel={!!placedLabelId}
                             placedLabelText={labelItem?.text}
                             canDrop={!!activeLabelId}
                             onClick={() => handleTargetClick(point.id)}
                             interactionMode={gameState.interactionMode}
-                            style={{
-                              left: `${x}px`,
-                              top: `${y}px`,
-                              position: "absolute",
-                            }}
+                            style={{ left: x, top: y, position: "absolute" }}
                           />
                         );
                       })}
@@ -345,30 +440,19 @@ const DiagramGame: React.FC = () => {
           <aside className="labels-rack">
             <div className="rack-header">
               <h2 className="rack-title">Labels</h2>
-              <div className="mode-toggle">
-                <button
-                  className={`mode-btn ${gameState.interactionMode === "click" ? "active" : ""}`}
-                  onClick={() =>
-                    setGameState((prev) => ({
-                      ...prev,
-                      interactionMode: "click",
-                    }))
-                  }
-                >
-                  Click
-                </button>
-                <button
-                  className={`mode-btn ${gameState.interactionMode === "drag" ? "active" : ""}`}
-                  onClick={() =>
-                    setGameState((prev) => ({
-                      ...prev,
-                      interactionMode: "drag",
-                    }))
-                  }
-                >
-                  Drag
-                </button>
-              </div>
+              <button
+                className="mode-toggle-icon"
+                onClick={() =>
+                  setGameState((prev) => ({
+                    ...prev,
+                    interactionMode:
+                      prev.interactionMode === "click" ? "drag" : "click",
+                  }))
+                }
+                title={`Switch to ${gameState.interactionMode === "click" ? "Drag" : "Click"} Mode`}
+              >
+                {gameState.interactionMode === "click" ? "🖱️" : "🖐️"}
+              </button>
             </div>
 
             <div className="labels-scroll-container">
@@ -394,24 +478,45 @@ const DiagramGame: React.FC = () => {
                 ))}
               </AnimatePresence>
               {availableLabels.length === 0 && (
-                <div className="no-labels">All items placed!</div>
+                <div className="no-labels">Challenge complete! 🎉</div>
               )}
             </div>
 
             <div className="rack-footer">
               <button
                 className={`btn-submit ${gameState.isReviewMode ? "active" : ""}`}
-                onClick={checkResults}
+                onClick={() => {
+                  if (gameState.isReviewMode) {
+                    setGameState((prev) => ({ ...prev, isReviewMode: false }));
+                  } else {
+                    const correctCount = Object.keys(
+                      gameState.placedPoints,
+                    ).filter(
+                      (tid) => gameState.placedPoints[tid] === tid,
+                    ).length;
+                    setGameState((prev) => ({
+                      ...prev,
+                      isReviewMode: true,
+                      showCongratulation:
+                        correctCount === APP_DATA.points.length,
+                    }));
+                  }
+                }}
                 disabled={Object.keys(gameState.placedPoints).length === 0}
               >
-                {gameState.isReviewMode ? "Continue" : "Check Results"}
+                {gameState.isReviewMode ? "Back to Edit" : "Check Results"}
               </button>
             </div>
           </aside>
         </main>
       </DndContext>
 
-      <DragOverlay dropAnimation={null}>
+      <DragOverlay
+        dropAnimation={{
+          duration: 300,
+          easing: "cubic-bezier(0.18, 0.89, 0.32, 1.28)",
+        }}
+      >
         {activeLabelId && gameState.interactionMode === "drag" ? (
           <div className="drag-overlay-label">
             {APP_DATA.points.find((p) => p.id === activeLabelId)?.text}
@@ -420,39 +525,53 @@ const DiagramGame: React.FC = () => {
       </DragOverlay>
 
       <AnimatePresence>
+        {gameState.isTutorialOpen && (
+          <TutorialModal
+            step={gameState.tutorialStep}
+            onPrev={() =>
+              setGameState((prev) => ({
+                ...prev,
+                tutorialStep: prev.tutorialStep - 1,
+              }))
+            }
+            onNext={() =>
+              setGameState((prev) => ({
+                ...prev,
+                tutorialStep: prev.tutorialStep + 1,
+              }))
+            }
+            onClose={() =>
+              setGameState((prev) => ({ ...prev, isTutorialOpen: false }))
+            }
+          />
+        )}
+
         {gameState.showCongratulation && (
-          <motion.div
+          <div
             className="popup-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             onClick={() =>
-              setGameState((prev) => ({ ...prev, showCongratulation: false }))
+              setGameState((p) => ({ ...p, showCongratulation: false }))
             }
           >
             <motion.div
               className="popup-content"
-              initial={{ scale: 0.8, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.8, opacity: 0, y: 20 }}
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="popup-icon">🎉</div>
-              <h2>Wonderful!</h2>
-              <p>You have correctly labeled the entire diagram.</p>
+              <div className="popup-icon">🏆</div>
+              <h2>Perfect Score!</h2>
+              <p>You have successfully labelled all parts of the diagram.</p>
               <button
                 className="btn-popup"
                 onClick={() =>
-                  setGameState((prev) => ({
-                    ...prev,
-                    showCongratulation: false,
-                  }))
+                  setGameState((p) => ({ ...p, showCongratulation: false }))
                 }
               >
-                Keep Exploring
+                Awesome!
               </button>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
@@ -464,6 +583,7 @@ const DiagramGame: React.FC = () => {
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 
 const AnnotationPointWrapper: React.FC<{
+  id: string;
   point: LabelledDiagramPoint;
   isCorrect: boolean;
   isWrong: boolean;
@@ -473,49 +593,20 @@ const AnnotationPointWrapper: React.FC<{
   onClick: () => void;
   interactionMode: "click" | "drag";
   style: React.CSSProperties;
-}> = ({ point, interactionMode, style, canDrop, ...props }) => {
+}> = ({ id, interactionMode, style, canDrop, point, ...props }) => {
   const { setNodeRef, isOver } = useDroppable({
-    id: point.id,
+    id,
     disabled: interactionMode !== "drag",
   });
-
   return (
     <div ref={setNodeRef} style={style}>
       <AnnotationPoint
         point={point}
         canDrop={canDrop || isOver}
-        style={{}} // Style is applied to parent wrapper
+        style={{}}
         {...props}
       />
     </div>
-  );
-};
-
-const LabelItem: React.FC<{
-  label: LabelledDiagramPoint;
-  isActive: boolean;
-  isPinned: boolean;
-  disabled: boolean;
-  onClick: () => void;
-}> = ({ label, isActive, isPinned, disabled, onClick }) => {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: label.id,
-    disabled: disabled,
-  });
-
-  return (
-    <motion.div
-      ref={setNodeRef}
-      layout
-      {...listeners}
-      {...attributes}
-      className={`label-item ${isActive ? "active" : ""} ${isPinned ? "pinned" : ""} ${isDragging ? "dragging" : ""}`}
-      onClick={onClick}
-      whileHover={{ x: 4 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      {label.text}
-    </motion.div>
   );
 };
 
