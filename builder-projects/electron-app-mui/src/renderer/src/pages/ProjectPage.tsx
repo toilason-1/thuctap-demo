@@ -21,6 +21,7 @@ import { useSettingsStore } from '@renderer/stores/settingsStore'
 import { getHistoryArray } from '@renderer/utils/historyUtils'
 import { buildProjectFile, buildProjectTitle } from '@renderer/utils/projectFileUtils'
 import type { AnyAppData, ProjectFile, ProjectMeta } from '@shared/types'
+import React from 'react'
 import { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useBoolean, useInterval, useUnmount } from 'usehooks-ts'
@@ -28,9 +29,9 @@ import { useBoolean, useInterval, useUnmount } from 'usehooks-ts'
 // ── Constants ────────────────────────────────────────────────────────────────
 const AUTO_SAVE_DEBOUNCE_MS = 1000
 
-// ── Inner Component (uses history) ───────────────────────────────────────────
 interface ProjectPageInnerProps {
   templateId: string
+  initialData: AnyAppData
   locationState: {
     filePath: string
     projectDir: string
@@ -38,7 +39,11 @@ interface ProjectPageInnerProps {
   } | null
 }
 
-function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps): JSX.Element {
+function ProjectPageInner({
+  templateId,
+  initialData: staticInitialData,
+  locationState
+}: ProjectPageInnerProps): JSX.Element {
   const navigate = useNavigate()
   const { resolved, projectSettings, setProjectSettings } = useSettings()
   const manager = useTemplateManager()
@@ -157,23 +162,26 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
   // ── Save ─────────────────────────────────────────────────────────────────
   const doSave = useCallback(
     async (currentMeta: ProjectMeta, appDataToSave?: AnyAppData) => {
-      const dataToSave = appDataToSave ?? appData
+      const dataToSave = appDataToSave ?? appDataRef.current
+      if (!dataToSave) return
       const file = buildProjectFile(currentMeta, dataToSave)
       const history = getHistoryArray(getHistory())
       await window.electronAPI.saveProject(file, currentMeta.filePath, history)
       setIsDirty(false)
     },
-    [appData, getHistory]
+    [getHistory]
   )
 
   const performSaveAs = useCallback(
     async (folder: string): Promise<void> => {
-      if (!meta) return
+      const currentMeta = metaRef.current
+      const currentAppData = appDataRef.current
+      if (!currentMeta || !currentAppData) return
       try {
         const history = getHistoryArray(getHistory())
         const newLoc = await window.electronAPI.doSaveAs({
-          projectData: buildProjectFile(meta, appData),
-          oldProjectDir: meta.projectDir,
+          projectData: buildProjectFile(currentMeta, currentAppData),
+          oldProjectDir: currentMeta.projectDir,
           newFolder: folder,
           history
         })
@@ -191,13 +199,13 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
         )
 
         // Add new project to recent projects list (treat like a new save)
-        const template = manager.getTemplate(meta.templateId)
+        const template = manager.getTemplate(currentMeta.templateId)
         await addRecentProject({
           filePath: newLoc.filePath,
           projectDir: newLoc.projectDir,
-          templateId: meta.templateId,
-          templateName: template?.name ?? meta.templateId,
-          projectName: meta.name,
+          templateId: currentMeta.templateId,
+          templateName: template?.name ?? currentMeta.templateId,
+          projectName: currentMeta.name,
           lastOpened: new Date().toISOString()
         })
 
@@ -208,7 +216,7 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
         showSnack(`Save As failed: ${e}`, 'error')
       }
     },
-    [meta, appData, getHistory, showSnack, addRecentProject, manager]
+    [getHistory, showSnack, addRecentProject, manager]
   )
 
   // ── Auto-save: interval mode ───────────────────────────────────────────────
@@ -263,10 +271,10 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
 
   // ── Save As ───────────────────────────────────────────────────────────────
   const handleSaveAs = useCallback(async (): Promise<void> => {
-    if (!meta) return
+    if (!metaRef.current) return
     const result = await window.electronAPI.saveProjectAs({
-      projectData: buildProjectFile(meta, appData),
-      oldProjectDir: meta.projectDir
+      projectData: buildProjectFile(metaRef.current, appDataRef.current!),
+      oldProjectDir: metaRef.current.projectDir
     })
     if (!result) return
     if (result.status === 'has-project' || result.status === 'non-empty') {
@@ -277,36 +285,38 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
       }
     }
     await performSaveAs(result.folder)
-  }, [meta, appData, showSnack, performSaveAs])
+  }, [showSnack, performSaveAs])
 
   const handleSave = useCallback(async (): Promise<void> => {
-    if (!meta) return
+    const currentMeta = metaRef.current
+    if (!currentMeta) return
 
     // If temporary, trigger save-as instead
-    if (meta.isTemporary) {
+    if (currentMeta.isTemporary) {
       await handleSaveAs()
       return
     }
 
     try {
-      const current = editorWrapperRef.current?.getValue?.() ?? appData
-      await doSave(meta, current)
+      const current = editorWrapperRef.current?.getValue?.() ?? appDataRef.current
+      await doSave(currentMeta, current!)
       showSnack('Project saved!')
     } catch (e) {
       showSnack(`Save failed: ${e}`, 'error')
     }
-  }, [meta, appData, doSave, showSnack, handleSaveAs])
+  }, [doSave, showSnack, handleSaveAs])
 
   // ── Export / Preview ───────────────────────────────────────────────────────
   const handleExport = async (mode: 'folder' | 'zip'): Promise<void> => {
     setExportAnchor(null)
-    if (!meta) return
+    const currentMeta = metaRef.current
+    if (!currentMeta) return
     try {
-      const current = editorWrapperRef.current?.getValue?.() ?? appData
+      const current = editorWrapperRef.current?.getValue?.() ?? appDataRef.current
       const result = await window.electronAPI.exportProject({
-        templateId: meta.templateId,
-        appData: current,
-        projectDir: meta.projectDir,
+        templateId: currentMeta.templateId,
+        appData: current!,
+        projectDir: currentMeta.projectDir,
         mode
       })
       if (result.canceled) return
@@ -317,13 +327,14 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
   }
 
   const handlePreview = async (): Promise<void> => {
-    if (!meta) return
+    const currentMeta = metaRef.current
+    if (!currentMeta) return
     try {
-      const current = editorWrapperRef.current?.getValue?.() ?? appData
+      const current = editorWrapperRef.current?.getValue?.() ?? appDataRef.current
       await window.electronAPI.previewProject({
-        templateId: meta.templateId,
-        appData: current,
-        projectDir: meta.projectDir
+        templateId: currentMeta.templateId,
+        appData: current!,
+        projectDir: currentMeta.projectDir
       })
       showSnack('Preview opened')
     } catch (e) {
@@ -333,16 +344,17 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
 
   // ── Rename ────────────────────────────────────────────────────────────────
   const handleRename = async (): Promise<void> => {
-    if (!meta || !renameValue.trim()) return
-    const updated = { ...meta, name: renameValue.trim() }
+    const currentMeta = metaRef.current
+    if (!currentMeta || !renameValue.trim()) return
+    const updated = { ...currentMeta, name: renameValue.trim() }
     setMeta(updated)
     setIsDirty(true)
     renameOpen.setFalse()
     try {
-      const current = editorWrapperRef.current?.getValue?.() ?? appData
-      await doSave(updated, current)
+      const current = editorWrapperRef.current?.getValue?.() ?? appDataRef.current
+      await doSave(updated, current!)
     } catch (e) {
-      setMeta(meta)
+      setMeta(currentMeta)
       showSnack(`Rename failed: ${e}`, 'error')
       throw e
     }
@@ -418,16 +430,14 @@ function ProjectPageInner({ templateId, locationState }: ProjectPageInnerProps):
                 </Typography>
               </Box>
             )
-          // Using ComponentType<any> here is a controlled 'loose' cast for the dynamic dispatch.
-          // Since TemplateManager.normalize ensures the data is correct for this specific Editor,
-          // it is safe at runtime and satisfies the heterogeneous registry lookup.
-          const Editor = entry.Editor as React.ComponentType<any>
+
           return (
-            <Editor
-              ref={editorWrapperRef}
-              initialData={manager.normalize(templateId, appData)}
+            <EditorWithMemo
+              entry={entry}
+              initialData={staticInitialData}
               projectDir={meta.projectDir}
-              onCommit={handleEditorCommit}
+              handleEditorCommit={handleEditorCommit}
+              editorWrapperRef={editorWrapperRef}
             />
           )
         })()}
@@ -515,7 +525,34 @@ export default function ProjectPage(): JSX.Element {
 
   return (
     <ProjectHistoryProvider initialState={initialData}>
-      <ProjectPageInner templateId={templateId} locationState={locationState} />
+      <ProjectPageInner
+        templateId={templateId}
+        initialData={initialData}
+        locationState={locationState}
+      />
     </ProjectHistoryProvider>
   )
 }
+
+// ── Memoized Editor Dispatch ────────────────────────────────────────────────
+/**
+ * Helper to render the memoized editor.
+ * This is separate to allow React.memo to work on the dynamic registry entry.
+ */
+// Using ComponentType<any> here is a controlled 'loose' cast for the dynamic dispatch.
+// Since TemplateManager.normalize ensures the data is correct for this specific Editor,
+// it is safe at runtime and satisfies the heterogeneous registry lookup.
+const EditorWithMemo = React.memo(
+  ({ entry, initialData, projectDir, handleEditorCommit, editorWrapperRef }: any) => {
+    const Editor = entry.Editor as React.ComponentType<any>
+    return (
+      <Editor
+        ref={editorWrapperRef}
+        initialData={initialData}
+        projectDir={projectDir}
+        onCommit={handleEditorCommit}
+      />
+    )
+  }
+)
+EditorWithMemo.displayName = 'EditorWithMemo'
