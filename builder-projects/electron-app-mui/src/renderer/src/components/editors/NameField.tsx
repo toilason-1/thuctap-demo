@@ -11,9 +11,6 @@ export interface NameFieldProps {
   sx?: SxProps
   /** When true, the TextField shows a required indicator and error state when empty */
   required?: boolean
-  onBlur?: () => void
-  error?: boolean
-  helperText?: string
 }
 
 /**
@@ -28,10 +25,7 @@ export function NameField({
   autoFocus,
   multiline,
   sx,
-  required = false,
-  onBlur,
-  error,
-  helperText
+  required = false
 }: NameFieldProps): React.ReactElement {
   const didSelect = useRef(false)
   const handleRef = useCallback(
@@ -57,9 +51,8 @@ export function NameField({
       minRows={multiline ? 2 : undefined}
       sx={[{ flex: 1 }, ...(Array.isArray(sx) ? sx : [sx])]}
       required={required}
-      error={error ?? (required && !value.trim())}
-      helperText={helperText ?? (required && !value.trim() ? 'Required' : '')}
-      onBlur={onBlur}
+      error={required && !value.trim()}
+      helperText={required && !value.trim() ? 'Required' : ''}
       inputRef={handleRef}
     />
   )

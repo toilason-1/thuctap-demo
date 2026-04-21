@@ -17,7 +17,6 @@ export interface QuizTabProps {
   onAddAnswer: (qid: string) => void
   onUpdateAnswer: (qid: string, aid: string, patch: Partial<QuizAnswer>) => void
   onDeleteAnswer: (qid: string, aid: string) => void
-  onCommit: () => void
 }
 
 /**
@@ -32,8 +31,7 @@ export function QuizTab({
   onDeleteQuestion,
   onAddAnswer,
   onUpdateAnswer,
-  onDeleteAnswer,
-  onCommit
+  onDeleteAnswer
 }: QuizTabProps): React.ReactElement {
   // Validation
   const noText = questions.filter((q) => !q.question.trim())
@@ -95,7 +93,6 @@ export function QuizTab({
               onAddAnswer={onAddAnswer}
               onUpdateAnswer={onUpdateAnswer}
               onDeleteAnswer={onDeleteAnswer}
-              onCommit={onCommit}
             />
           ))}
         </Box>
