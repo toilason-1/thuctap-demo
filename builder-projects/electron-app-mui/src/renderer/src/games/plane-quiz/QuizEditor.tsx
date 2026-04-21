@@ -67,8 +67,8 @@ const QuizEditor = forwardRef<EditorWrapperHandle<QuizAppData>, QuizEditorProps>
             { id: `${qid}-a-2`, text: resolved.prefillNames ? 'Answer B' : '', isCorrect: false }
           ]
         }
-        form.setFieldValue('_questionCounter', qc, { dontUpdateMeta: true })
-        form.pushFieldValue('questions', q, { dontUpdateMeta: true })
+        form.setFieldValue('_questionCounter', qc, { touch: false })
+        form.pushFieldValue('questions', q, { touch: false })
         commit()
       },
       [form, resolved.prefillNames, commit]
@@ -90,8 +90,8 @@ const QuizEditor = forwardRef<EditorWrapperHandle<QuizAppData>, QuizEditorProps>
             { id: `${qid}-a-2`, text: resolved.prefillNames ? 'Answer B' : '', isCorrect: false }
           ]
         }
-        form.setFieldValue('_questionCounter', qc, { dontUpdateMeta: true })
-        form.pushFieldValue('questions', q, { dontUpdateMeta: true })
+        form.setFieldValue('_questionCounter', qc, { touch: false })
+        form.pushFieldValue('questions', q, { touch: false })
         commit()
       },
       [form, projectDir, resolved.prefillNames, commit]
@@ -99,7 +99,7 @@ const QuizEditor = forwardRef<EditorWrapperHandle<QuizAppData>, QuizEditorProps>
 
     const deleteQuestion = useCallback(
       (qIdx: number): void => {
-        form.removeFieldValue('questions', qIdx, { dontUpdateMeta: true })
+        form.removeFieldValue('questions', qIdx, { touch: false })
         commit()
       },
       [form, commit]
@@ -115,8 +115,8 @@ const QuizEditor = forwardRef<EditorWrapperHandle<QuizAppData>, QuizEditorProps>
           text: resolved.prefillNames ? `Answer ${toBb26(ac)}` : '',
           isCorrect: false
         }
-        form.setFieldValue(`questions[${qIdx}]._answerCounter`, ac, { dontUpdateMeta: true })
-        form.pushFieldValue(`questions[${qIdx}].answers`, newAnswer, { dontUpdateMeta: true })
+        form.setFieldValue(`questions[${qIdx}]._answerCounter`, ac, { touch: false })
+        form.pushFieldValue(`questions[${qIdx}].answers`, newAnswer, { touch: false })
         commit()
       },
       [form, resolved.prefillNames, commit]
@@ -124,7 +124,7 @@ const QuizEditor = forwardRef<EditorWrapperHandle<QuizAppData>, QuizEditorProps>
 
     const deleteAnswer = useCallback(
       (qIdx: number, aIdx: number): void => {
-        form.removeFieldValue(`questions[${qIdx}].answers`, aIdx, { dontUpdateMeta: true })
+        form.removeFieldValue(`questions[${qIdx}].answers`, aIdx, { touch: false })
         commit()
       },
       [form, commit]
@@ -143,12 +143,12 @@ const QuizEditor = forwardRef<EditorWrapperHandle<QuizAppData>, QuizEditorProps>
             form.setFieldValue(
               `questions[${qIdx}].answers[${i}].isCorrect`,
               i === aIdx ? !isCurrentlyCorrect : false,
-              { dontUpdateMeta: true }
+              { touch: false }
             )
           })
         } else {
           form.setFieldValue(`questions[${qIdx}].answers[${aIdx}].isCorrect`, !isCurrentlyCorrect, {
-            dontUpdateMeta: true
+            touch: false
           })
         }
         commit()
