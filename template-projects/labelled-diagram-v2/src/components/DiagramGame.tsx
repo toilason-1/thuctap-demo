@@ -1,3 +1,15 @@
+import {
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  PointerSensor,
+  rectIntersection,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -6,7 +18,7 @@ import {
   type ReactZoomPanPinchRef,
 } from "react-zoom-pan-pinch";
 import { APP_DATA, resolveAssetUrl } from "../data";
-import type { GameState } from "../types";
+import type { GameState, LabelledDiagramPoint } from "../types";
 import "./DiagramGame.css";
 
 // --- Sub-components ---
@@ -42,7 +54,6 @@ const TutorialModal: React.FC<{
   onClose: () => void;
 }> = ({ step, onPrev, onNext, onClose }) => {
   const [imgError, setImgError] = useState(false);
-
   useEffect(() => {
     setImgError(false);
   }, [step]);
@@ -50,33 +61,32 @@ const TutorialModal: React.FC<{
   const steps = [
     {
       title: "Welcome! 👋",
-      desc: "Let's learn how to label this diagram correctly. It's easy, follow the steps!",
+      desc: "Let's learn how to label this diagram correctly.",
       img: "tutorial-1.png",
     },
     {
       title: "Move and Zoom 🔍",
-      desc: "Use your mouse wheel to zoom in or out. Hold the LEFT button and drag to move the map around.",
+      desc: "Scroll to zoom, LEFT click and drag to move the diagram.",
       img: "tutorial-2.png",
     },
     {
-      title: "Interactive Modes 🖱️",
-      desc: "Click the icon in the sidebar to switch between 'Click' and 'Drag' modes.",
+      title: "Modes 🖱️",
+      desc: "Toggle between Click and Drag modes using the sidebar icon.",
       img: "tutorial-3.png",
     },
     {
-      title: "Labelling 🏷️",
-      desc: "In Drag mode, pull a label onto a target circle. In Click mode, select a label first, then click a target.",
+      title: "Labeling 🏷️",
+      desc: "Drag labels to targets or select then click. Easy!",
       img: "tutorial-4.png",
     },
     {
-      title: "Check Results ✅",
-      desc: "Press 'Check Results' at the bottom when you're done. Green means correct, Red means try again!",
+      title: "Results ✅",
+      desc: "Check your work at any time using the button.",
       img: "tutorial-5.png",
     },
   ];
 
   const currentStep = steps[step];
-
   return (
     <div className="tutorial-overlay" onClick={onClose}>
       <motion.div
@@ -97,7 +107,7 @@ const TutorialModal: React.FC<{
           ) : (
             <div className="tutorial-placeholder">
               <span>🖼️</span>
-              <span>Tutorial Image {step + 1}</span>
+              <span>Image {step + 1}</span>
             </div>
           )}
         </div>
@@ -110,20 +120,19 @@ const TutorialModal: React.FC<{
           <h2 className="tutorial-title">{currentStep.title}</h2>
           <p className="tutorial-desc">{currentStep.desc}</p>
           <div className="tutorial-nav">
-            {step > 0 ? (
+            {step > 0 && (
               <button className="btn-nav btn-prev" onClick={onPrev}>
                 Previous
               </button>
-            ) : (
-              <div style={{ flex: 1 }} />
             )}
+            <div style={{ flex: 1 }} />
             {step < steps.length - 1 ? (
               <button className="btn-nav btn-next" onClick={onNext}>
                 Next
               </button>
             ) : (
               <button className="btn-nav btn-done" onClick={onClose}>
-                Start Playing
+                Finish
               </button>
             )}
           </div>
@@ -133,7 +142,40 @@ const TutorialModal: React.FC<{
   );
 };
 
-const AnnotationPoint: React.FC<{
+// --- Specialized Internal Components ---
+
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+
+const DraggableLabel: React.FC<{
+  label: LabelledDiagramPoint;
+  isActive: boolean;
+  isPinned: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}> = ({ label, isActive, isPinned, disabled, onClick }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: label.id,
+    disabled: disabled,
+  });
+
+  return (
+    <motion.div
+      ref={setNodeRef}
+      layout
+      {...listeners}
+      {...attributes}
+      className={`label-item ${isActive ? "active" : ""} ${isPinned ? "pinned" : ""} ${isDragging ? "dragging" : ""}`}
+      onClick={onClick}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      {label.text}
+    </motion.div>
+  );
+};
+
+const DroppablePoint: React.FC<{
+  point: LabelledDiagramPoint;
   isCorrect: boolean;
   isWrong: boolean;
   hasLabel: boolean;
@@ -142,6 +184,7 @@ const AnnotationPoint: React.FC<{
   onClick: () => void;
   style: React.CSSProperties;
 }> = ({
+  point,
   isCorrect,
   isWrong,
   hasLabel,
@@ -149,30 +192,47 @@ const AnnotationPoint: React.FC<{
   canDrop,
   onClick,
   style,
-}) => (
-  <div
-    className={`target-point ${canDrop ? "can-drop" : ""} ${hasLabel ? "has-label" : ""} ${isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}`}
-    onClick={(e) => {
-      e.stopPropagation();
-      onClick();
-    }}
-    style={style}
-  >
-    <div className="target-marker" />
-    <AnimatePresence>
-      {placedLabelText && (
-        <motion.div
-          initial={{ scale: 0, opacity: 0, y: 10, x: "-50%" }}
-          animate={{ scale: 1, opacity: 1, y: 0, x: "-50%" }}
-          exit={{ scale: 0, opacity: 0, y: 10, x: "-50%" }}
-          className="placed-label"
-        >
-          {placedLabelText}
-        </motion.div>
-      )}
-    </AnimatePresence>
-  </div>
-);
+}) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: point.id,
+    disabled: !canDrop,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`target-point ${canDrop || isOver ? "can-drop" : ""} ${hasLabel ? "has-label" : ""} ${isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      style={{
+        ...style,
+        pointerEvents: "auto",
+        background: isOver ? "rgba(245, 158, 11, 0.4)" : "transparent", // Visual feedback like group-sort
+        borderRadius: "50%",
+        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        zIndex: isOver ? 200 : 100,
+        width: 44, // Match CSS
+        height: 44,
+      }}
+    >
+      <div className="target-marker" />
+      <AnimatePresence>
+        {placedLabelText && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0, y: 10, x: "-50%" }}
+            animate={{ scale: 1, opacity: 1, y: 0, x: "-50%" }}
+            exit={{ scale: 0, opacity: 0, y: 10, x: "-50%" }}
+            className="placed-label"
+          >
+            {placedLabelText}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 // --- Main Game Component ---
 
@@ -199,6 +259,12 @@ const DiagramGame: React.FC = () => {
 
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(MouseSensor),
+    useSensor(TouchSensor),
+  );
 
   const availableLabels = useMemo(() => {
     const placedLabelIds = Object.values(gameState.placedPoints);
@@ -238,6 +304,29 @@ const DiagramGame: React.FC = () => {
     }
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    if (gameState.isReviewMode || gameState.interactionMode !== "drag") return;
+    setActiveLabelId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { over, active } = event;
+    setActiveLabelId(null);
+
+    if (over && over.id) {
+      const targetId = over.id as string;
+      const labelId = active.id as string;
+      setGameState((prev) => {
+        const newPlaced = { ...prev.placedPoints };
+        Object.keys(newPlaced).forEach((tid) => {
+          if (newPlaced[tid] === labelId) delete newPlaced[tid];
+        });
+        newPlaced[targetId] = labelId;
+        return { ...prev, placedPoints: newPlaced };
+      });
+    }
+  };
+
   return (
     <div className="game-container">
       <GameHeader
@@ -260,19 +349,28 @@ const DiagramGame: React.FC = () => {
         }
       />
 
-      <main className="game-main">
-        <div className="canvas-area">
-          <TransformWrapper
-            ref={transformRef}
-            initialScale={1}
-            minScale={0.1}
-            maxScale={8}
-            centerOnInit
-            doubleClick={{ disabled: true }}
-            onTransformed={(ref) => setTransform({ ...ref.state })}
-            onInit={(ref) => setTransform({ ...ref.state })}
-          >
-            {({ resetTransform }) => (
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        collisionDetection={rectIntersection}
+      >
+        <main className="game-main">
+          <div className="canvas-area">
+            <TransformWrapper
+              ref={transformRef}
+              initialScale={1}
+              minScale={0.1}
+              maxScale={8}
+              centerOnInit
+              doubleClick={{ disabled: true }}
+              onTransformed={(ref) => setTransform({ ...ref.state })}
+              onInit={(ref) => setTransform({ ...ref.state })}
+              panning={{
+                disabled:
+                  gameState.interactionMode === "drag" && !!activeLabelId,
+              }}
+            >
               <div className="diagram-stage">
                 <div className="canvas-controls">
                   <button onClick={() => transformRef.current?.zoomIn()}>
@@ -283,7 +381,7 @@ const DiagramGame: React.FC = () => {
                   </button>
                   <button
                     className="btn-reset-view"
-                    onClick={() => resetTransform()}
+                    onClick={() => transformRef.current?.resetTransform()}
                   >
                     Reset View
                   </button>
@@ -306,11 +404,10 @@ const DiagramGame: React.FC = () => {
                             width: img.offsetWidth,
                             height: img.offsetHeight,
                           });
-                          if (transformRef.current) {
+                          if (transformRef.current)
                             setTransform({
                               ...transformRef.current.instance.transformState,
                             });
-                          }
                         }}
                       />
                     ) : (
@@ -350,14 +447,17 @@ const DiagramGame: React.FC = () => {
                         transform.positionY;
 
                       return (
-                        <AnnotationPoint
+                        <DroppablePoint
                           key={point.id}
                           point={point}
                           isCorrect={isCorrect}
                           isWrong={isWrong}
                           hasLabel={!!placedLabelId}
                           placedLabelText={labelItem?.text}
-                          canDrop={false}
+                          canDrop={
+                            gameState.interactionMode === "drag" &&
+                            !!activeLabelId
+                          }
                           onClick={() => handleTargetClick(point.id)}
                           style={{ left: x, top: y, position: "absolute" }}
                         />
@@ -365,77 +465,94 @@ const DiagramGame: React.FC = () => {
                     })}
                 </div>
               </div>
-            )}
-          </TransformWrapper>
-        </div>
-
-        <aside className="labels-rack">
-          <div className="rack-header">
-            <h2 className="rack-title">Labels</h2>
-            <button
-              className="mode-toggle-icon"
-              onClick={() =>
-                setGameState((prev) => ({
-                  ...prev,
-                  interactionMode:
-                    prev.interactionMode === "click" ? "drag" : "click",
-                }))
-              }
-            >
-              {gameState.interactionMode === "click" ? "🖱️" : "🖐️"}
-            </button>
+            </TransformWrapper>
           </div>
 
-          <div className="labels-scroll-container">
-            <AnimatePresence mode="popLayout">
-              {availableLabels.map((label) => (
-                <motion.div
-                  key={label.id}
-                  layout
-                  className={`label-item ${activeLabelId === label.id ? "active" : ""} ${gameState.interactionMode === "click" && activeLabelId === label.id ? "pinned" : ""}`}
-                  onClick={() => {
-                    if (gameState.interactionMode === "click") {
-                      setActiveLabelId((prev) =>
-                        prev === label.id ? null : label.id,
-                      );
-                    }
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {label.text}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            {availableLabels.length === 0 && (
-              <div className="no-labels">Challenge complete! 🎉</div>
-            )}
-          </div>
-
-          <div className="rack-footer">
-            <button
-              className={`btn-submit ${gameState.isReviewMode ? "active" : ""}`}
-              onClick={() => {
-                if (gameState.isReviewMode) {
-                  setGameState((prev) => ({ ...prev, isReviewMode: false }));
-                } else {
-                  const correctCount = Object.keys(
-                    gameState.placedPoints,
-                  ).filter((tid) => gameState.placedPoints[tid] === tid).length;
+          <aside className="labels-rack">
+            <div className="rack-header">
+              <h2 className="rack-title">Labels</h2>
+              <button
+                className="mode-toggle-icon"
+                onClick={() =>
                   setGameState((prev) => ({
                     ...prev,
-                    isReviewMode: true,
-                    showCongratulation: correctCount === APP_DATA.points.length,
-                  }));
+                    interactionMode:
+                      prev.interactionMode === "click" ? "drag" : "click",
+                  }))
                 }
-              }}
-              disabled={Object.keys(gameState.placedPoints).length === 0}
-            >
-              {gameState.isReviewMode ? "Back to Edit" : "Check Results"}
-            </button>
-          </div>
-        </aside>
-      </main>
+              >
+                {gameState.interactionMode === "click" ? "🖱️" : "🖐️"}
+              </button>
+            </div>
+
+            <div className="labels-scroll-container">
+              <AnimatePresence mode="popLayout">
+                {availableLabels.map((label) => (
+                  <DraggableLabel
+                    key={label.id}
+                    label={label}
+                    isActive={activeLabelId === label.id}
+                    isPinned={
+                      gameState.interactionMode === "click" &&
+                      activeLabelId === label.id
+                    }
+                    disabled={gameState.isReviewMode}
+                    onClick={() => {
+                      if (gameState.interactionMode === "click") {
+                        setActiveLabelId((prev) =>
+                          prev === label.id ? null : label.id,
+                        );
+                      }
+                    }}
+                  />
+                ))}
+              </AnimatePresence>
+              {availableLabels.length === 0 && (
+                <div className="no-labels">Challenge complete! 🎉</div>
+              )}
+            </div>
+
+            <div className="rack-footer">
+              <button
+                className={`btn-submit ${gameState.isReviewMode ? "active" : ""}`}
+                onClick={() => {
+                  if (gameState.isReviewMode) {
+                    setGameState((prev) => ({ ...prev, isReviewMode: false }));
+                  } else {
+                    const correctCount = Object.keys(
+                      gameState.placedPoints,
+                    ).filter(
+                      (tid) => gameState.placedPoints[tid] === tid,
+                    ).length;
+                    setGameState((prev) => ({
+                      ...prev,
+                      isReviewMode: true,
+                      showCongratulation:
+                        correctCount === APP_DATA.points.length,
+                    }));
+                  }
+                }}
+                disabled={Object.keys(gameState.placedPoints).length === 0}
+              >
+                {gameState.isReviewMode ? "Back to Edit" : "Check Results"}
+              </button>
+            </div>
+          </aside>
+        </main>
+
+        <DragOverlay
+          dropAnimation={{
+            duration: 300,
+            easing: "cubic-bezier(0.18, 0.89, 0.32, 1.28)",
+          }}
+        >
+          {activeLabelId && gameState.interactionMode === "drag" ? (
+            <div className="drag-overlay-label">
+              {APP_DATA.points.find((p) => p.id === activeLabelId)?.text}
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       <AnimatePresence>
         {gameState.isTutorialOpen && (
