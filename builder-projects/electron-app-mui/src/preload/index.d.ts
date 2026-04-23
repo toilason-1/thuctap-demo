@@ -15,6 +15,7 @@ export interface ElectronAPI {
   checkFolderStatus: (folderPath: string) => Promise<FolderStatus>
   chooseProjectFolder: () => Promise<string | null>
   openProjectFile: (filePath?: string) => Promise<{ filePath: string; data: ProjectFile } | null>
+  readProjectFile: (filePath?: string) => Promise<{ filePath: string; data: ProjectFile } | null>
   saveProject: (data: object, projectPath: string, history?: object[]) => Promise<boolean>
   saveProjectAs: (opts: {
     projectData: object
