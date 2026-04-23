@@ -14,6 +14,7 @@ import { ProjectHistoryProvider } from '@renderer/context/ProjectHistoryProvider
 import { useProjectHistory } from '@renderer/context/useProjectHistory'
 import { useSnackbar } from '@renderer/hooks'
 import { useAppDocumentTitle } from '@renderer/hooks/useAppDocumentTitle'
+import { useProjectFile, useInvalidateProjectFile } from '@renderer/hooks/useProjectFile'
 import { useProjectShortcuts } from '@renderer/hooks/useProjectShortcuts'
 import { useSettings } from '@renderer/hooks/useSettings'
 import { useTemplateManager } from '@renderer/hooks/useTemplates'
@@ -23,7 +24,7 @@ import { buildProjectFile, buildProjectTitle } from '@renderer/utils/projectFile
 import type { AnyAppData, ProjectFile, ProjectMeta } from '@shared/types'
 import isDeepEqual from 'react-fast-compare'
 import React, { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useBoolean, useInterval, useUnmount } from 'usehooks-ts'
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -32,17 +33,19 @@ const AUTO_SAVE_DEBOUNCE_MS = 1000
 interface ProjectPageInnerProps {
   templateId: string
   initialData: AnyAppData
-  locationState: {
-    filePath: string
-    projectDir: string
-    data: ProjectFile
-  } | null
+  filePath: string
+  isTemporary: boolean
+  projectData: ProjectFile
+  invalidateProject: (filePath: string) => void
 }
 
 function ProjectPageInner({
   templateId,
   initialData: staticInitialData,
-  locationState
+  filePath,
+  isTemporary: initialIsTemporary,
+  projectData,
+  invalidateProject
 }: ProjectPageInnerProps): JSX.Element {
   const navigate = useNavigate()
   const { resolved, projectSettings, setProjectSettings } = useSettings()
@@ -50,20 +53,16 @@ function ProjectPageInner({
   const addRecentProject = useSettingsStore((s) => s.addRecentProject)
 
   // Split project state: meta (file location, name) is separate from app data (game content)
-  const [meta, setMeta] = useState<ProjectMeta | null>(
-    locationState
-      ? {
-          filePath: locationState.filePath,
-          projectDir: locationState.projectDir,
-          templateId: locationState.data.templateId,
-          name: locationState.data.name,
-          createdAt: locationState.data.createdAt,
-          updatedAt: locationState.data.updatedAt,
-          settings: locationState.data.settings,
-          isTemporary: (locationState as { isTemporary?: boolean }).isTemporary ?? false
-        }
-      : null
-  )
+  const [meta, setMeta] = useState<ProjectMeta | null>({
+    filePath,
+    projectDir: filePath.replace(/[/\\][^/\\]+$/, ''),
+    templateId: projectData.templateId,
+    name: projectData.name,
+    createdAt: projectData.createdAt,
+    updatedAt: projectData.updatedAt,
+    settings: projectData.settings,
+    isTemporary: initialIsTemporary
+  })
   const [isDirty, setIsDirty] = useState(false)
 
   const {
@@ -112,9 +111,9 @@ function ProjectPageInner({
 
   // Sync project settings to context
   useEffect(() => {
-    setProjectSettings(locationState?.data?.settings ?? null)
+    setProjectSettings(projectData.settings ?? null)
     return () => setProjectSettings(null)
-  }, [locationState?.data?.settings, setProjectSettings])
+  }, [projectData.settings, setProjectSettings])
 
   // Track previous projectSettings to detect changes
   const [prevProjectSettings, setPrevProjectSettings] = useState(projectSettings)
@@ -171,8 +170,10 @@ function ProjectPageInner({
       const history = getHistoryArray(getHistory())
       await window.electronAPI.saveProject(file, currentMeta.filePath, history)
       setIsDirty(false)
+      // Invalidate query cache after save
+      invalidateProject(currentMeta.filePath)
     },
-    [getHistory]
+    [getHistory, invalidateProject]
   )
 
   const performSaveAs = useCallback(
@@ -189,6 +190,9 @@ function ProjectPageInner({
           history
         })
 
+        // Invalidate old query
+        invalidateProject(currentMeta.filePath)
+
         // Update meta and clear isTemporary flag
         setMeta((prev) =>
           prev
@@ -199,6 +203,12 @@ function ProjectPageInner({
                 isTemporary: false
               }
             : prev
+        )
+
+        // Navigate to new URL
+        navigate(
+          `/project/${currentMeta.templateId}?filePath=${encodeURIComponent(newLoc.filePath)}`,
+          { replace: true }
         )
 
         // Add new project to recent projects list (treat like a new save)
@@ -219,7 +229,7 @@ function ProjectPageInner({
         showSnack(`Save As failed: ${e}`, 'error')
       }
     },
-    [getHistory, showSnack, addRecentProject, manager]
+    [getHistory, showSnack, addRecentProject, manager, invalidateProject, navigate]
   )
 
   // ── Auto-save: interval mode ───────────────────────────────────────────────
@@ -500,24 +510,13 @@ function ProjectPageInner({
 // ── Main Component (wraps with Provider) ─────────────────────────────────────
 export default function ProjectPage(): JSX.Element {
   const { templateId } = useParams<{ templateId: string }>()
-  const location = useLocation()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
-  const locationState = location.state as {
-    filePath: string
-    projectDir: string
-    data: ProjectFile
-  } | null
+  const filePath = searchParams.get('filePath')
+  const isTemporary = searchParams.get('isTemporary') === 'true'
 
-  const manager = useTemplateManager()
-
-  const initialData = useMemo(() => {
-    const rawData = locationState?.data.appData ?? ({} as AnyAppData)
-    if (!templateId) return rawData
-    return manager.normalize(templateId, rawData)
-  }, [locationState, templateId, manager])
-
-  if (!templateId) {
+  if (!templateId || !filePath) {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
         <Typography color="error">No project data. Go back and try again.</Typography>
@@ -527,11 +526,45 @@ export default function ProjectPage(): JSX.Element {
   }
 
   return (
+    <ProjectPageContent templateId={templateId} filePath={filePath} isTemporary={isTemporary} />
+  )
+}
+
+function ProjectPageContent({
+  templateId,
+  filePath,
+  isTemporary
+}: {
+  templateId: string
+  filePath: string
+  isTemporary: boolean
+}): JSX.Element {
+  const invalidateProject = useInvalidateProjectFile()
+
+  // Use suspense query to load project data
+  const { data: projectData } = useProjectFile(filePath)
+
+  const manager = useTemplateManager()
+
+  const initialData = useMemo(() => {
+    const rawData = projectData?.appData ?? ({} as AnyAppData)
+    return manager.normalize(templateId, rawData)
+  }, [projectData, templateId, manager])
+
+  // Invalidate query on unmount (project closed)
+  useUnmount(() => {
+    invalidateProject(filePath)
+  })
+
+  return (
     <ProjectHistoryProvider initialState={initialData}>
       <ProjectPageInner
         templateId={templateId}
         initialData={initialData}
-        locationState={locationState}
+        filePath={filePath}
+        isTemporary={isTemporary}
+        projectData={projectData}
+        invalidateProject={invalidateProject}
       />
     </ProjectHistoryProvider>
   )
