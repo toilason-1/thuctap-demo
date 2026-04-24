@@ -68,7 +68,7 @@
     "react-hotkeys-hook": "^5.2.4",
     "react-router-dom": "^7.14.2",
     "react-use": "^17.6.0",
-    "react-zoom-pan-pinch": "^4.0.3",
+    "react-zoom-pan-pinch": "3.7.0",
     "tailwindcss": "^4.2.4",
     "tmp": "^0.2.5",
     "travels": "^1.2.0",
