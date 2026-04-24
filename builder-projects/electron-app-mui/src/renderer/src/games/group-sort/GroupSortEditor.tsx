@@ -6,9 +6,9 @@ import { Alert, Box, Chip, Collapse, Divider, Typography } from '@mui/material'
 import { SidebarTab } from '@renderer/components/editors'
 import { GroupSortAppData } from '@shared/types'
 import { JSX, useState } from 'react'
+import { LegacyEditorProps } from '../legacyEditorProps'
 import { GroupsTab, ItemsTab, OverviewTab } from './components'
 import { useGroupSortCrud } from './hooks/useGroupSortCrud'
-import { LegacyEditorProps } from '../legacyEditorProps'
 
 type Tab = 'groups' | 'items' | 'overview'
 

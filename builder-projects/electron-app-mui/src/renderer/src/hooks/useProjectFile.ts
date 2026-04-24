@@ -1,9 +1,9 @@
+import type { ProjectFile } from '@shared/types'
 import {
-  useSuspenseQuery,
   useQueryClient,
+  useSuspenseQuery,
   type UseSuspenseQueryResult
 } from '@tanstack/react-query'
-import type { ProjectFile } from '@shared/types'
 
 export const PROJECT_FILE_QUERY_KEY = (filePath: string) => ['project-file', filePath] as const
 

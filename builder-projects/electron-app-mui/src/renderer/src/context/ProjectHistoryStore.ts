@@ -1,7 +1,7 @@
 import type { AnyAppData } from '@shared/types'
+import isDeepEqual from 'react-fast-compare'
 import { createStore, type StoreApi } from 'zustand'
 import { travel } from 'zustand-travel'
-import isDeepEqual from 'react-fast-compare'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 export const MAX_HISTORY_LENGTH = 50

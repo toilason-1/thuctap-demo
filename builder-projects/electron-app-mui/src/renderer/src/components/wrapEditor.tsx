@@ -1,7 +1,7 @@
-import React from 'react'
-import { EditorWrapper, EditorWrapperHandle } from './EditorWrapper'
-import { LegacyEditorProps } from '../games/legacyEditorProps'
 import { AnyAppData } from '@shared'
+import React from 'react'
+import { LegacyEditorProps } from '../games/legacyEditorProps'
+import { EditorWrapper, EditorWrapperHandle } from './EditorWrapper'
 
 // Helper to obtain a wrapped editor from an existing editor component
 // This is a thin adapter that can be used by the registry to migrate editors progressively
